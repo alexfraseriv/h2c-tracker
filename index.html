@@ -177,7 +177,8 @@
   footer button[aria-pressed="true"]{color:var(--amber);border-color:color-mix(in srgb, var(--amber) 45%, var(--line))}
 
   /* ---- leg detail dialog ---- */
-  dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);width:min(92vw,380px);padding:18px}
+  dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);width:min(92vw,380px);padding:18px;
+    margin:auto;position:fixed;inset:0;max-height:min(92vh,92dvh);overflow-y:auto}
   dialog::backdrop{background:rgba(0,0,0,.6)}
   dialog h2{font-size:17px;margin-bottom:2px}
   dialog .sub{font-size:13px;color:var(--dim);margin-bottom:12px}
