@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="H2C">
+<link rel="manifest" href="manifest.json">
+<title>H2C 2026 — Van Tracker</title>
+<style>
+  :root{
+    --bg:#0d0f13; --panel:#161a21; --panel-2:#1b202a; --line:#262d39;
+    --ink:#e9edf4; --dim:#8b94a4; --faint:#5b6373;
+    --amber:#ffc53d; --amber-deep:#c98f1f; --amber-ink:#1a1503;
+    --van1:#5ab0ff; --van2:#c78bff;
+    --green:#3ddc84; --red:#ff6161;
+    --mono:ui-monospace,'SF Mono','Roboto Mono','Cascadia Mono',Menlo,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);
+    padding-bottom:max(24px, env(safe-area-inset-bottom));min-height:100vh}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  a{color:var(--amber)}
+  button:focus-visible,a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .v1{color:var(--van1)} .v2{color:var(--van2)}
+
+  header{position:sticky;top:0;z-index:5;background:rgba(13,15,19,.92);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .brand strong{font-size:13px;letter-spacing:.06em}
+  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:20px;font-weight:700;line-height:1}
+  #syncPill{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--dim);white-space:nowrap}
+  #syncPill .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  #syncPill.live .dot{background:var(--green)}
+  #syncPill.pending .dot{background:var(--amber)}
+  #syncPill.offline .dot{background:var(--red)}
+  #syncPill.error{border-color:color-mix(in srgb, var(--red) 50%, var(--line));color:var(--red)}
+  #syncPill.error .dot{background:var(--red)}
+
+  main{max-width:520px;margin:0 auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:14px}
+
+  /* ---- NOW bib card ---- */
+  .bib{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:16px 16px 18px;position:relative;overflow:hidden}
+  .bib::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,transparent,var(--amber) 30%,var(--amber) 70%,transparent);opacity:.85}
+  .bib-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .legchip{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--amber);
+    border:1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+    background:color-mix(in srgb, var(--amber) 10%, transparent);border-radius:8px;padding:5px 9px;letter-spacing:.06em}
+  #nowRunner{font-size:32px;font-weight:800;letter-spacing:-.01em;line-height:1.1;margin:2px 0 12px}
+  .bib-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .stat .eyebrow{margin-bottom:4px}
+  .stat b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:17px;font-weight:700}
+  #nowDelta.ahead{color:var(--green)} #nowDelta.behind{color:var(--amber)}
+  #nowSub{margin-top:12px;font-size:13px;color:var(--dim)}
+  #nowSub button{color:var(--amber);font-size:13px;font-weight:600;padding:2px 4px;text-decoration:underline;text-underline-offset:3px}
+
+  /* ---- plunger ---- */
+  #plunger{width:100%;min-height:86px;border-radius:18px;background:var(--amber);color:var(--amber-ink);
+    font-size:21px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    box-shadow:0 7px 0 var(--amber-deep), 0 14px 28px -10px rgba(255,197,61,.45);
+    transform:translateY(0);transition:transform .05s ease, box-shadow .05s ease;position:relative;overflow:hidden}
+  #plunger::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
+    background:repeating-linear-gradient(-45deg,#1a1503 0 8px,transparent 8px 16px);opacity:.25}
+  #plunger:active{transform:translateY(5px);box-shadow:0 2px 0 var(--amber-deep), 0 6px 14px -8px rgba(255,197,61,.4)}
+  #plunger small{font-size:12px;font-weight:600;opacity:.75;font-family:var(--mono)}
+  #plunger:disabled{background:var(--panel-2);color:var(--faint);box-shadow:none;transform:none}
+  #plunger:disabled::after{display:none}
+  #plunger.startmode{background:var(--green);box-shadow:0 7px 0 #1f9e59, 0 14px 28px -10px rgba(61,220,132,.4);color:#04160c}
+  #plunger.startmode:active{box-shadow:0 2px 0 #1f9e59, 0 6px 14px -8px rgba(61,220,132,.35)}
+
+  /* ---- confirm card ---- */
+  #confirmCard{display:none;background:var(--panel);border:1px solid color-mix(in srgb, var(--amber) 55%, var(--line));
+    border-radius:18px;padding:16px}
+  #confirmCard.show{display:block}
+  #confirmWho{font-size:15px;font-weight:700;margin:6px 0 4px}
+  #confirmTime{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:38px;font-weight:800;
+    text-align:center;margin:8px 0 12px;letter-spacing:-.01em}
+  .nudges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .nudges button{border:1px solid var(--line);border-radius:10px;padding:12px 0;font-family:var(--mono);
+    font-size:14px;font-weight:700;color:var(--dim);background:var(--panel-2)}
+  .nudges button:active{background:var(--line)}
+  .confirm-actions{display:flex;gap:10px}
+  .confirm-actions .cancel{border:1px solid var(--line);border-radius:14px;padding:16px 18px;color:var(--dim);font-weight:700}
+  .confirm-actions .go{flex:1;background:var(--amber);color:var(--amber-ink);font-weight:800;font-size:17px;
+    border-radius:14px;padding:16px 0;box-shadow:0 4px 0 var(--amber-deep)}
+  .confirm-actions .go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--amber-deep)}
+
+  /* ---- next up ---- */
+  .nextrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  .nextrow:last-child{border-bottom:0}
+  .nextrow .legchip{font-size:11px;padding:3px 7px}
+  .nextrow .legchip.c1{color:var(--van1);border-color:color-mix(in srgb, var(--van1) 45%, transparent);background:color-mix(in srgb, var(--van1) 10%, transparent)}
+  .nextrow .legchip.c2{color:var(--van2);border-color:color-mix(in srgb, var(--van2) 45%, transparent);background:color-mix(in srgb, var(--van2) 10%, transparent)}
+  .nextrow .who{flex:1;font-weight:600;font-size:15px;min-width:0}
+  .nextrow .eta{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--dim)}
+
+  /* ---- van filter + legend ---- */
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+  .seg button{flex:1;padding:10px 0;border-radius:9px;font-size:13px;font-weight:700;color:var(--dim)}
+  .seg button[aria-pressed="true"]{background:var(--panel-2);border:1px solid var(--line);color:var(--amber)}
+  .seg button[data-van="1"][aria-pressed="true"]{color:var(--van1)}
+  .seg button[data-van="2"][aria-pressed="true"]{color:var(--van2)}
+  .legend{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:var(--faint);padding:0 4px}
+  .legend .mono{font-size:11px}
+
+  /* ---- race timeline ---- */
+  .legrow{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:8px;position:relative}
+  .legrow .rowmain{width:100%;display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;text-align:left;
+    padding:11px 12px;border:0;background:none}
+  .legrow.done .rowmain{padding-right:78px}
+  .killbtn{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;
+    border:1px solid var(--line);border-radius:10px;background:var(--panel-2);padding:7px 9px;font-size:14px;line-height:1}
+  .killbtn b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--dim)}
+  .killbtn:active{background:var(--line)}
+  .legrow::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0}
+  .legrow.van1::before{background:color-mix(in srgb, var(--van1) 65%, transparent)}
+  .legrow.van2::before{background:color-mix(in srgb, var(--van2) 65%, transparent)}
+  .legrow .num{font-family:var(--mono);font-weight:700;font-size:13px}
+  .legrow.van1 .num{color:var(--van1)} .legrow.van2 .num{color:var(--van2)}
+  .legrow.done .num{color:var(--green)}
+  .legrow.current{border-color:color-mix(in srgb, var(--amber) 55%, var(--line))}
+  .legrow .mid{min-width:0}
+  .legrow .name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .legrow .meta{font-size:12px;color:var(--dim);font-family:var(--mono);font-variant-numeric:tabular-nums;margin-top:2px}
+  .legrow .right{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+  .legrow .right .t{font-weight:700;font-size:14px}
+  .legrow .right .d{font-size:11px;color:var(--dim);margin-top:2px}
+  .legrow .right .d.ahead{color:var(--green)} .legrow .right .d.behind{color:var(--amber)}
+  .tag{display:inline-block;font-size:10px;letter-spacing:.08em;font-weight:700;border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+  .tag.q{color:var(--amber);border:1px solid color-mix(in srgb, var(--amber) 45%, transparent)}
+  .tag.k{color:var(--dim);border:1px solid var(--line)}
+
+  .exline{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;
+    padding:11px 12px;margin:2px 0 10px;border:1px dashed var(--line);border-radius:12px;
+    background:color-mix(in srgb, var(--panel) 45%, transparent)}
+  .exline .ic{font-size:16px;text-align:center}
+  .exline .name{font-weight:700;font-size:14px}
+  .exline .after{font-size:12px;color:var(--faint);margin-top:2px}
+  .exline .after a{font-size:12px}
+  .exline .when{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;text-align:right;color:var(--dim)}
+  .exline .when.done{color:var(--green)}
+  .exline .when.next{color:var(--amber);font-weight:700}
+  .exline .plan{font-size:11px;color:var(--faint);text-align:right;margin-top:2px;font-family:var(--mono)}
+  .exline.nextex{border-color:color-mix(in srgb, var(--amber) 45%, var(--line))}
+
+  /* ---- history ---- */
+  #history{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px 0}
+  #history.show{display:block}
+  .histhead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+  .histhead button{color:var(--amber);font-weight:700;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:7px 11px}
+  #histErr{display:none;margin:0 14px 8px;padding:9px 11px;border-radius:10px;font-size:13px;
+    color:var(--red);border:1px solid color-mix(in srgb, var(--red) 40%, var(--line));
+    background:color-mix(in srgb, var(--red) 8%, transparent)}
+  #histErr.show{display:block}
+  .histrow{display:grid;grid-template-columns:22px 1fr auto;gap:2px 10px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px}
+  .histrow .ic{font-weight:800}
+  .histrow.synced .ic{color:var(--green)} .histrow.queued .ic{color:var(--amber)}
+  .histrow.failed .ic{color:var(--red)} .histrow.conflict .ic{color:var(--amber)} .histrow.local .ic{color:var(--faint)}
+  .histrow .lbl{font-weight:600}
+  .histrow .set{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--dim);text-align:right}
+  .histrow .det{grid-column:2 / -1;color:var(--faint);font-size:12px}
+  .histrow.failed .det{color:var(--red)}
+
+  footer{max-width:520px;margin:6px auto 0;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--faint);font-size:12px}
+  footer button{color:var(--dim);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:600;background:var(--panel)}
+  footer button[aria-pressed="true"]{color:var(--amber);border-color:color-mix(in srgb, var(--amber) 45%, var(--line))}
+
+  /* ---- leg detail dialog ---- */
+  dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);width:min(92vw,380px);padding:18px}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog h2{font-size:17px;margin-bottom:2px}
+  dialog .sub{font-size:13px;color:var(--dim);margin-bottom:12px}
+  .dlginfo{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .dlginfo .r{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;font-size:13px;border-top:1px solid var(--line)}
+  .dlginfo .r:first-child{border-top:0}
+  .dlginfo .k{color:var(--faint)}
+  .dlginfo .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+  .locknote{font-size:13px;color:var(--dim);border:1px dashed var(--line);border-radius:12px;padding:11px 12px;margin-bottom:14px}
+  dialog input[type="time"]{width:100%;font-family:var(--mono);font-size:24px;font-weight:700;text-align:center;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px;margin-bottom:10px;color-scheme:dark}
+  .dlg-actions{display:flex;gap:10px}
+  .dlg-actions .primary{flex:1;background:var(--amber);color:var(--amber-ink);font-weight:800;border-radius:12px;padding:13px 0;font-size:15px}
+  .dlg-actions .ghost{border:1px solid var(--line);border-radius:12px;padding:13px 14px;color:var(--dim);font-weight:600}
+  .dlg-actions .danger{color:var(--red)}
+  #dlgKills{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+  .killhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+  .killhead b{font-family:var(--mono);font-size:26px}
+  .killrow{display:grid;grid-template-columns:52px 1fr 52px;gap:10px;align-items:center;margin-bottom:12px}
+  .killrow button{border:1px solid var(--line);border-radius:10px;padding:12px 0;font-size:18px;font-weight:800;color:var(--dim);background:var(--panel-2)}
+  .killrow input[type="range"]{width:100%;accent-color:var(--amber)}
+  #killSave{width:100%;border:1px solid color-mix(in srgb, var(--amber) 45%, var(--line));color:var(--amber);
+    font-weight:800;border-radius:12px;padding:12px 0;font-size:14px}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <strong>HOOD → COAST</strong>
+    <span id="raceClock" aria-label="race clock">--:--:--</span>
+  </div>
+  <button id="syncPill" aria-expanded="false" aria-controls="history"><span class="dot"></span><span id="syncText">Starting…</span></button>
+</header>
+
+<main>
+  <section class="bib" aria-labelledby="nowRunner">
+    <div class="bib-top">
+      <span class="legchip" id="nowLeg">LEG —</span>
+      <span class="eyebrow" id="nowState">On the road</span>
+    </div>
+    <div id="nowRunner">—</div>
+    <div class="bib-grid">
+      <div class="stat"><div class="eyebrow">On leg</div><b id="nowElapsed">—</b></div>
+      <div class="stat"><div class="eyebrow">ETA</div><b id="nowProj">—</b></div>
+      <div class="stat"><div class="eyebrow">Vs plan</div><b id="nowDelta">—</b></div>
+    </div>
+    <div id="nowSub">—</div>
+  </section>
+
+  <button id="plunger" disabled>
+    <span id="plungerLabel">Loading…</span>
+    <small id="plungerSub"></small>
+  </button>
+
+  <section id="confirmCard" aria-live="polite">
+    <div class="eyebrow" id="confirmKind">Confirm handoff</div>
+    <div id="confirmWho">—</div>
+    <div id="confirmTime">—</div>
+    <div class="nudges">
+      <button data-n="-60">−1m</button><button data-n="-15">−15s</button>
+      <button data-n="15">+15s</button><button data-n="60">+1m</button>
+    </div>
+    <div class="confirm-actions">
+      <button class="cancel" id="confirmCancel">Cancel</button>
+      <button class="go" id="confirmGo">Confirm</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow" style="margin:0 2px 4px">Up next</div>
+    <div id="nextUp"></div>
+  </section>
+
+  <div class="seg" role="group" aria-label="Van filter">
+    <button data-van="0" aria-pressed="true">Full route</button>
+    <button data-van="1" aria-pressed="false">Van 1</button>
+    <button data-van="2" aria-pressed="false">Van 2</button>
+  </div>
+  <div class="legend">
+    <span>plan = sheet schedule · ETA = live estimate</span>
+    <span class="mono" id="killTotal"></span>
+  </div>
+
+  <section id="timeline"></section>
+
+  <section id="history" aria-label="Sync history">
+    <div class="histhead">
+      <span class="eyebrow">Change history</span>
+      <button id="retryBtn">Sync now</button>
+    </div>
+    <div id="histErr"></div>
+    <div id="histList"></div>
+  </section>
+</main>
+
+<footer>
+  <span>Sheet: <span class="mono" id="lastSync">never</span></span>
+  <span style="display:flex;gap:8px">
+    <button id="awakeBtn" aria-pressed="false">Keep awake</button>
+    <button id="histBtn">History</button>
+  </span>
+</footer>
+
+<dialog id="editDlg">
+  <h2 id="dlgTitle">Leg</h2>
+  <div class="sub" id="dlgSub"></div>
+  <div class="dlginfo" id="dlgInfo"></div>
+  <div class="locknote" id="dlgLock" hidden></div>
+  <div id="dlgTimeWrap">
+    <input type="time" id="dlgTime" step="1" aria-label="Time">
+    <div class="nudges">
+      <button data-n="-60">−1m</button><button data-n="-15">−15s</button>
+      <button data-n="15">+15s</button><button data-n="60">+1m</button>
+    </div>
+    <div class="dlg-actions">
+      <button class="ghost danger" id="dlgClear">Clear</button>
+      <button class="ghost" id="dlgCancel">Close</button>
+      <button class="primary" id="dlgSave">Confirm time</button>
+    </div>
+  </div>
+  <div class="dlg-actions" id="dlgCloseOnly" hidden>
+    <button class="ghost" id="dlgClose2" style="flex:1">Close</button>
+  </div>
+  <div id="dlgKills" hidden>
+    <div class="killhead"><span class="eyebrow">Roadkills (runners passed)</span><b id="killVal">0</b></div>
+    <div class="killrow">
+      <button id="killMinus" aria-label="one fewer kill">−</button>
+      <input type="range" id="killSlider" min="0" max="100" step="1" value="0" aria-label="kill count">
+      <button id="killPlus" aria-label="one more kill">+</button>
+    </div>
+    <button id="killSave">Save roadkills</button>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+/* ================= CONFIG ================= */
+const CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxEin76NH4Z-ufIhlphEwBMSvuTgtPYkDM9c8SizctOk4d7zk5pbYr7sXoST0_WBzYRDg/exec',
+  TEAM_KEY: 'seaside-or-bust-2026',     // must match Code.gs
+  TZ: 'America/Los_Angeles',
+  POLL_SEC: 60,
+};
+
+/* ============ Baked fallback (first paint / never-online) ============ */
+const RACE_PLANNED_BAKED = '2026-08-28T12:45:00-07:00';
+const NAMES = {1:'Matt McFarland',2:'Anthony Socotch',3:'Taylor Doty',4:'Lara Geoghegan',5:'Patrick Geoghegan',6:'Courtney Ratkowiak',7:'Samantha Cox',8:'TJ Kell',9:'Brian Schaldach',10:'Trevor Montre',11:'Brian Wehner',12:'Alex Fraser'};
+const BAKED_RAW = [
+  [1,1,6.26,'2026-08-28T13:50:56-07:00'],[2,2,6.05,'2026-08-28T14:27:14-07:00'],
+  [3,3,4.08,'2026-08-28T15:01:47-07:00'],[4,4,6.64,'2026-08-28T16:15:23-07:00'],
+  [5,5,6.05,'2026-08-28T16:50:28-07:00'],[6,6,7.10,'2026-08-28T17:44:54-07:00'],
+  [7,7,5.25,'2026-08-28T18:37:19-07:00'],[8,8,6.00,'2026-08-28T19:23:49-07:00'],
+  [9,9,5.38,'2026-08-28T20:09:22-07:00'],[10,10,6.15,'2026-08-28T20:55:29-07:00'],
+  [11,11,3.92,'2026-08-28T21:29:28-07:00'],[12,12,5.85,'2026-08-28T22:29:55-07:00'],
+  [13,1,5.21,'2026-08-28T23:24:47-07:00'],[14,2,7.91,'2026-08-29T00:12:15-07:00'],
+  [15,3,6.00,'2026-08-29T01:03:03-07:00'],[16,4,4.00,'2026-08-29T01:47:23-07:00'],
+  [17,5,5.32,'2026-08-29T02:18:14-07:00'],[18,6,4.15,'2026-08-29T02:50:03-07:00'],
+  [19,7,5.89,'2026-08-29T03:48:51-07:00'],[20,8,5.58,'2026-08-29T04:32:06-07:00'],
+  [21,9,5.06,'2026-08-29T05:14:57-07:00'],[22,10,6.82,'2026-08-29T06:06:06-07:00'],
+  [23,11,4.16,'2026-08-29T06:42:09-07:00'],[24,12,4.83,'2026-08-29T07:32:03-07:00'],
+  [25,1,3.80,'2026-08-29T08:12:05-07:00'],[26,2,5.65,'2026-08-29T08:45:59-07:00'],
+  [27,3,6.36,'2026-08-29T09:39:50-07:00'],[28,4,3.83,'2026-08-29T10:22:17-07:00'],
+  [29,5,5.97,'2026-08-29T10:56:54-07:00'],[30,6,5.32,'2026-08-29T11:37:42-07:00'],
+  [31,7,3.96,'2026-08-29T12:17:14-07:00'],[32,8,4.20,'2026-08-29T12:49:47-07:00'],
+  [33,9,7.72,'2026-08-29T13:55:08-07:00'],[34,10,4.12,'2026-08-29T14:26:02-07:00'],
+  [35,11,7.07,'2026-08-29T15:27:19-07:00'],[36,12,5.03,'2026-08-29T16:19:17-07:00'],
+];
+const BAKED_LEGS = BAKED_RAW.map((r, i) => ({
+  leg: r[0], runner: NAMES[r[1]], runnerNum: r[1], miles: r[2],
+  predStart: i === 0 ? RACE_PLANNED_BAKED : BAKED_RAW[i-1][3],
+  predEnd: r[3], actEnd: null,
+}));
+const EXCHANGES = [
+  { afterLeg:0,  kind:'start',  name:'Timberline Lodge',        url:'https://g.page/timberline-lodge-and-ski-area?share' },
+  { afterLeg:6,  kind:'swap', from:1, to:2, name:'Sandy High School',       url:'https://goo.gl/maps/FdMSrZyr2D7wQr6j6' },
+  { afterLeg:12, kind:'swap', from:2, to:1, name:'OMSI Gravel Lot',         url:'https://goo.gl/maps/vPLMY4Wgkty95vQq7' },
+  { afterLeg:18, kind:'swap', from:1, to:2, name:'Columbia Co Fairgrounds', url:'https://goo.gl/maps/RddDBYkvt7h9bLsF7' },
+  { afterLeg:24, kind:'swap', from:2, to:1, name:'HWY 202, Clatskanie',     url:'https://goo.gl/maps/QyqHGWYBhcCAMbAd7' },
+  { afterLeg:30, kind:'swap', from:1, to:2, name:'HWY 202, Astoria',        url:'https://goo.gl/maps/PzXvEBGL62znSXHbA' },
+  { afterLeg:36, kind:'finish', name:'Seaside',                 url:'https://goo.gl/maps/RsdcfWkChVQbqE1H7' },
+];
+
+/* ================= Local store ================= */
+const LS = {
+  get(k, fb){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+};
+let sheetLegs   = LS.get('h2c2_sheet', null);
+let serverEnds  = LS.get('h2c2_ends', {});
+let serverKills = LS.get('h2c2_kills', {});
+let raceStartSv = LS.get('h2c2_raceStart', null);
+let queue       = LS.get('h2c2_queue', []);
+let log         = LS.get('h2c2_log', []);
+let draft       = LS.get('h2c2_draft', null);
+let vanFilter   = LS.get('h2c2_van', 0);
+let lastSyncAt  = LS.get('h2c2_lastSync', null);
+let lastErr     = LS.get('h2c2_lastErr', null);
+const persist = () => { LS.set('h2c2_queue', queue); LS.set('h2c2_log', log);
+  LS.set('h2c2_ends', serverEnds); LS.set('h2c2_kills', serverKills); LS.set('h2c2_sheet', sheetLegs);
+  LS.set('h2c2_raceStart', raceStartSv); LS.set('h2c2_draft', draft);
+  LS.set('h2c2_lastSync', lastSyncAt); LS.set('h2c2_lastErr', lastErr); };
+
+/* ================= Race model ================= */
+let LEGS = [], RACE_PLANNED = new Date(RACE_PLANNED_BAKED), DNAME = {};
+const first = s => String(s).split(' ')[0];
+function buildModel(){
+  const ok = Array.isArray(sheetLegs) && sheetLegs.length === 36 &&
+             sheetLegs.every(l => l.leg && l.runner && l.predStart && l.predEnd && l.miles);
+  const src = ok ? sheetLegs : BAKED_LEGS;
+  LEGS = src.map((l) => {
+    const predStart = new Date(l.predStart), predEnd = new Date(l.predEnd);
+    return {
+      leg: l.leg, runner: l.runner,
+      rnum: Number(l.runnerNum) || ((l.leg - 1) % 12) + 1,
+      miles: Number(l.miles),
+      predStart, predEnd, predDur: Math.max(60000, predEnd - predStart),
+      van: (Math.floor((l.leg - 1) / 6) % 2 === 0) ? 1 : 2,
+    };
+  });
+  RACE_PLANNED = LEGS[0].predStart;
+  // First names everywhere; add a last initial only when two runners share one.
+  DNAME = {};
+  const uniq = [...new Set(LEGS.map(l => l.runner))];
+  const firsts = {};
+  uniq.forEach(n => { firsts[first(n)] = (firsts[first(n)] || 0) + 1; });
+  uniq.forEach(n => {
+    const parts = n.trim().split(/\s+/);
+    DNAME[n] = firsts[first(n)] > 1 && parts[1] ? parts[0] + ' ' + parts[1][0] : parts[0];
+  });
+}
+buildModel();
+const dn = full => DNAME[full] || first(full);
+const dnn = L => dn(L.runner) + ' (R' + L.rnum + ')';
+
+function queuedFor(leg){
+  for (let i = queue.length - 1; i >= 0; i--)
+    if (queue[i].leg === leg && (queue[i].kind === 'record' || queue[i].kind === 'clear')) return queue[i];
+  return null;
+}
+function queuedKills(leg){
+  for (let i = queue.length - 1; i >= 0; i--)
+    if (queue[i].leg === leg && queue[i].kind === 'kills') return queue[i];
+  return null;
+}
+function queuedStart(){
+  for (let i = queue.length - 1; i >= 0; i--)
+    if (queue[i].kind === 'raceStart' || queue[i].kind === 'startClear') return queue[i];
+  return null;
+}
+function actualEnd(leg){
+  const q = queuedFor(leg);
+  if (q) return q.kind === 'clear' ? null : new Date(q.whenISO);
+  const s = serverEnds[leg];
+  return s ? new Date(s) : null;
+}
+function killsFor(leg){
+  const q = queuedKills(leg);
+  if (q) return q.kills;
+  const k = serverKills[leg];
+  return typeof k === 'number' ? k : null;
+}
+function effStart(){
+  const q = queuedStart();
+  if (q) return q.kind === 'startClear' ? null : new Date(q.whenISO);
+  if (raceStartSv) return new Date(raceStartSv);
+  return LEGS.some(L => actualEnd(L.leg)) ? RACE_PLANNED : null;
+}
+function currentLeg(){
+  for (const L of LEGS) if (!actualEnd(L.leg)) return L;
+  return null;
+}
+function projections(){
+  const proj = {}; let run = effStart() || RACE_PLANNED;
+  for (const L of LEGS){
+    const a = actualEnd(L.leg);
+    run = a || new Date(+run + L.predDur);
+    proj[L.leg] = run;
+  }
+  return proj;
+}
+
+/* ================= Formatting ================= */
+const tf  = new Intl.DateTimeFormat('en-US', { hour:'numeric', minute:'2-digit', timeZone: CONFIG.TZ });
+const tfs = new Intl.DateTimeFormat('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', timeZone: CONFIG.TZ });
+const df  = new Intl.DateTimeFormat('en-US', { weekday:'short', timeZone: CONFIG.TZ });
+const pacDay = d => new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(d);
+const fmtT = d => tf.format(d);
+const fmtTS = d => tfs.format(d);
+const dayTag = d => df.format(d) === df.format(RACE_PLANNED) ? '' : df.format(d) + ' ';
+function fmtDur(ms){
+  const neg = ms < 0; ms = Math.abs(ms);
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  const core = h > 0 ? h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
+                     : m + ':' + String(sec).padStart(2,'0');
+  return (neg ? '-' : '') + core;
+}
+function fmtDelta(ms){
+  const a = Math.abs(ms);
+  if (a < 30000) return { txt:'on plan', cls:'' };
+  const mins = Math.round(a/60000);
+  const t = mins >= 60 ? Math.floor(mins/60) + 'h ' + (mins%60) + 'm' : mins + 'm';
+  return ms < 0 ? { txt: t + ' ahead', cls:'ahead' } : { txt: t + ' behind', cls:'behind' };
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vanSpan = v => '<span class="v' + v + '">Van ' + v + '</span>';
+
+/* ================= Ops, log, drafts ================= */
+function addLog(id, label, setStr, status, detail){
+  log.unshift({ id, at: Date.now(), label, set: setStr, status, detail: detail || '' });
+  if (log.length > 80) log.length = 80;
+}
+function setLog(id, status, detail){
+  const e = log.find(x => x.id === id);
+  if (e){ e.status = status; e.detail = detail || ''; }
+}
+function enqueueOp(kind, leg, when, kills){
+  const id = Date.now() + '-' + Math.floor(Math.random() * 1e5);
+  if (kind === 'raceStart' || kind === 'startClear') queue = queue.filter(q => q.kind !== 'raceStart' && q.kind !== 'startClear');
+  else if (kind === 'kills') queue = queue.filter(q => !(q.leg === leg && q.kind === 'kills'));
+  else queue = queue.filter(q => !(q.leg === leg && (q.kind === 'record' || q.kind === 'clear')));
+  queue.push({ id, kind, leg: leg || null, whenISO: when ? when.toISOString() : null,
+               kills: typeof kills === 'number' ? kills : null, ts: Date.now() });
+  const who = leg && LEGS[leg-1] ? dn(LEGS[leg-1].runner) : '';
+  const label = kind === 'raceStart' ? 'Race start' :
+                kind === 'startClear' ? 'Clear race start' :
+                kind === 'clear' ? 'Clear leg ' + leg :
+                kind === 'kills' ? 'Leg ' + leg + ' roadkills — ' + who :
+                'Leg ' + leg + ' — ' + who;
+  const setStr = kind === 'kills' ? '🪦 ' + kills : (when ? dayTag(when) + fmtTS(when) : '—');
+  addLog(id, label, setStr, CONFIG.SCRIPT_URL ? 'queued' : 'local',
+         CONFIG.SCRIPT_URL ? 'Saved on this phone — sending to sheet…' : 'No sheet URL configured — stored on this phone only');
+  persist(); render(); sync();
+}
+
+/* ---- plunger → stamp → confirm ---- */
+const $ = id => document.getElementById(id);
+$('plunger').addEventListener('click', () => {
+  if (draft) return;
+  const started = !!effStart();
+  const cur = currentLeg();
+  if (started && !cur) return;
+  draft = started
+    ? { kind: 'leg', leg: cur.leg, whenISO: new Date().toISOString() }
+    : { kind: 'start', whenISO: new Date().toISOString() };
+  if (navigator.vibrate) navigator.vibrate(30);
+  persist(); render();
+});
+$('confirmGo').addEventListener('click', () => {
+  if (!draft) return;
+  const d = draft; draft = null;
+  if (d.kind === 'start') enqueueOp('raceStart', null, new Date(d.whenISO));
+  else enqueueOp('record', d.leg, new Date(d.whenISO));
+});
+$('confirmCancel').addEventListener('click', () => { draft = null; persist(); render(); });
+document.querySelector('#confirmCard .nudges').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-n]');
+  if (!b || !draft) return;
+  draft.whenISO = new Date(+new Date(draft.whenISO) + Number(b.dataset.n) * 1000).toISOString();
+  persist(); render();
+});
+
+/* ---- leg detail dialog ---- */
+const dlg = $('editDlg');
+let dlgMode = null, dlgRef = null, dlgKillsVal = 0;
+
+/* Interpret a Pacific wall-clock time on the calendar day nearest the
+   reference moment (the existing record, or right now) — so edits during a
+   Monday test land on Monday, and a 12:02 AM edit of an 11:58 PM finish
+   still lands on the right side of midnight. */
+function hmsToDate(hms, ref){
+  const [h, m, s] = hms.split(':').map(Number);
+  const pad = n => String(n).padStart(2, '0');
+  let best = null;
+  for (const off of [-1, 0, 1]){
+    const c = new Date(pacDay(new Date(+ref + off * 86400000)) + 'T' + pad(h) + ':' + pad(m) + ':' + pad(s || 0) + '-07:00');
+    if (!best || Math.abs(c - ref) < Math.abs(best - ref)) best = c;
+  }
+  return best;
+}
+function toHMS(d){
+  return new Intl.DateTimeFormat('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone: CONFIG.TZ }).format(d);
+}
+function infoRow(k, v){ return '<div class="r"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+
+function openDlg(mode){
+  dlgMode = mode;
+  const proj = projections();
+  if (mode.kind === 'start'){
+    const s = effStart();
+    dlgRef = s || new Date();
+    $('dlgTitle').textContent = 'Race start';
+    $('dlgSub').textContent = 'Gun time at Timberline · times are Pacific';
+    $('dlgInfo').innerHTML = infoRow('Plan', df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED)) +
+      (s ? infoRow('Recorded', dayTag(s) + fmtTS(s)) : '');
+    $('dlgLock').hidden = true;
+    $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true; $('dlgKills').hidden = true;
+    $('dlgTime').value = toHMS(dlgRef);
+    $('dlgClear').style.display = s ? '' : 'none';
+  } else if (mode.kind === 'kills'){
+    const L = LEGS[mode.leg - 1];
+    const end = actualEnd(L.leg);
+    $('dlgTitle').textContent = 'Roadkills — ' + dnn(L);
+    $('dlgSub').innerHTML = vanSpan(L.van) + ' · leg ' + L.leg + ' · runners passed on this leg';
+    $('dlgInfo').innerHTML = end ? infoRow('Leg finished', dayTag(end) + fmtTS(end)) : '';
+    $('dlgLock').hidden = true;
+    $('dlgTimeWrap').hidden = true;
+    $('dlgCloseOnly').hidden = false;
+    $('dlgKills').hidden = false;
+    dlgKillsVal = killsFor(L.leg) ?? 0;
+    renderKills();
+    dlg.showModal();
+    return;
+  } else {
+    const L = LEGS[mode.leg - 1];
+    const cur = currentLeg();
+    const end = actualEnd(L.leg);
+    const isCurrent = cur && cur.leg === L.leg;
+    const isFuture = !mode.force && cur && L.leg > cur.leg;
+    dlgRef = end || new Date();
+    $('dlgTitle').textContent = dnn(L) + ' — leg ' + L.leg;
+    $('dlgSub').innerHTML = vanSpan(L.van) + ' · times are Pacific';
+    let rows = infoRow('Distance', L.miles.toFixed(2) + ' mi') +
+               infoRow('Plan pace', fmtDur(L.predDur / L.miles) + '/mi') +
+               infoRow('Plan window', dayTag(L.predStart) + fmtT(L.predStart) + ' – ' + dayTag(L.predEnd) + fmtT(L.predEnd));
+    if (end){
+      const d = fmtDelta(end - L.predEnd);
+      rows += infoRow('Recorded end', dayTag(end) + fmtTS(end)) + infoRow('Vs plan', d.txt);
+    } else {
+      rows += infoRow('ETA', dayTag(proj[L.leg]) + fmtT(proj[L.leg]));
+    }
+    $('dlgInfo').innerHTML = rows;
+
+    if (isFuture){
+      const prev = dn(LEGS[L.leg - 2].runner);
+      $('dlgLock').innerHTML = 'Legs are recorded in order — this one unlocks after ' + esc(prev) + ' finishes leg ' + (L.leg - 1) + '.' +
+        '<br>Phone been offline and this leg is really done? <button id="dlgUnlock">Record it anyway</button>';
+      $('dlgLock').hidden = false;
+      $('dlgTimeWrap').hidden = true; $('dlgCloseOnly').hidden = false; $('dlgKills').hidden = true;
+    } else {
+      $('dlgLock').hidden = true;
+      $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true;
+      $('dlgTime').value = toHMS(dlgRef);
+      $('dlgClear').style.display = end ? '' : 'none';
+      $('dlgSave').textContent = end ? 'Confirm new time' : 'Confirm finish';
+      $('dlgKills').hidden = true; // kills live behind the chase button on the row now
+      if (isCurrent && !end) $('dlgSub').innerHTML = vanSpan(L.van) + ' · on the road now · big button is the fast path';
+    }
+  }
+  dlg.showModal();
+}
+function renderKills(){
+  $('killVal').textContent = dlgKillsVal;
+  $('killSlider').value = Math.min(dlgKillsVal, 100);
+}
+$('killSlider').addEventListener('input', () => { dlgKillsVal = Number($('killSlider').value); renderKills(); });
+$('killMinus').addEventListener('click', () => { dlgKillsVal = Math.max(0, dlgKillsVal - 1); renderKills(); });
+$('killPlus').addEventListener('click', () => { dlgKillsVal = Math.min(300, dlgKillsVal + 1); renderKills(); });
+$('killSave').addEventListener('click', () => { enqueueOp('kills', dlgMode.leg, null, dlgKillsVal); dlg.close(); });
+
+document.querySelector('#editDlg .nudges').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-n]');
+  if (!b || !$('dlgTime').value) return;
+  $('dlgTime').value = toHMS(new Date(+hmsToDate($('dlgTime').value, dlgRef) + Number(b.dataset.n) * 1000));
+});
+$('dlgSave').addEventListener('click', () => {
+  if (!$('dlgTime').value) return;
+  if (dlgMode.kind === 'start') enqueueOp('raceStart', null, hmsToDate($('dlgTime').value, dlgRef));
+  else enqueueOp('record', dlgMode.leg, hmsToDate($('dlgTime').value, dlgRef));
+  dlg.close();
+});
+$('dlgClear').addEventListener('click', () => {
+  if (dlgMode.kind === 'start') enqueueOp('startClear', null, null);
+  else enqueueOp('clear', dlgMode.leg, null);
+  dlg.close();
+});
+$('dlgLock').addEventListener('click', (ev) => {
+  if (ev.target.closest('#dlgUnlock')) openDlg({ kind:'leg', leg: dlgMode.leg, force: true });
+});
+$('dlgCancel').addEventListener('click', () => dlg.close());
+$('dlgClose2').addEventListener('click', () => dlg.close());
+$('timeline').addEventListener('click', (ev) => {
+  const kb = ev.target.closest('.killbtn');
+  if (kb) return openDlg({ kind:'kills', leg: Number(kb.dataset.leg) });
+  const row = ev.target.closest('.rowmain');
+  if (row) openDlg({ kind:'leg', leg: Number(row.dataset.leg) });
+});
+$('nowSub').addEventListener('click', (ev) => {
+  if (ev.target.closest('#adjStart')) openDlg({ kind:'start' });
+});
+
+/* ================= Sync engine ================= */
+let syncing = false, retryTimer = null, failStreak = 0;
+
+async function fetchJSON(url, opts){
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 30000); // half-bar zones: hung ≠ forever
+  try {
+    const res = await fetch(url, Object.assign({ signal: ctrl.signal }, opts));
+    return await res.json();
+  } finally { clearTimeout(t); }
+}
+async function callSheet(payload){
+  return fetchJSON(CONFIG.SCRIPT_URL, {
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ key: CONFIG.TEAM_KEY }, payload)),
+  });
+}
+function applySheet(state){
+  if (!state) return;
+  if (Array.isArray(state.legs) && state.legs.length === 36){
+    sheetLegs = state.legs.map(l => ({ leg:l.leg, runner:l.runner, runnerNum:l.runnerNum, miles:l.miles, predStart:l.predStart, predEnd:l.predEnd }));
+    const ends = {};
+    for (const l of state.legs) ends[l.leg] = l.actEnd || null;
+    serverEnds = ends;
+  }
+  if (state.kills && typeof state.kills === 'object'){
+    const k = {};
+    for (const key of Object.keys(state.kills)) k[Number(key)] = Number(state.kills[key]) || 0;
+    serverKills = k;
+  }
+  raceStartSv = state.raceStartActual || null;
+  lastSyncAt = Date.now(); lastErr = null; failStreak = 0;
+  buildModel();
+}
+function verifySent(sent){
+  for (const op of sent){
+    if (op.kind === 'record'){
+      const sheet = serverEnds[op.leg] ? new Date(serverEnds[op.leg]) : null;
+      if (sheet && Math.abs(sheet - new Date(op.whenISO)) < 1500) setLog(op.id, 'synced', 'Confirmed in sheet ' + fmtTS(sheet));
+      else if (sheet) setLog(op.id, 'conflict', 'Sheet shows ' + dayTag(sheet) + fmtTS(sheet) + ' — kept the sheet value');
+      else setLog(op.id, 'failed', 'Sheet did not accept the write — tap the leg to retry');
+    } else if (op.kind === 'clear'){
+      setLog(op.id, serverEnds[op.leg] ? 'conflict' : 'synced', serverEnds[op.leg] ? 'Sheet still has a time for this leg' : 'Cleared in sheet');
+    } else if (op.kind === 'kills'){
+      const ok = serverKills[op.leg] === op.kills;
+      setLog(op.id, ok ? 'synced' : 'conflict', ok ? 'Saved to the App Kills tab' : 'App Kills tab shows ' + (serverKills[op.leg] ?? '—'));
+    } else if (op.kind === 'raceStart'){
+      const ok = raceStartSv && Math.abs(new Date(raceStartSv) - new Date(op.whenISO)) < 1500;
+      setLog(op.id, ok ? 'synced' : 'conflict', ok ? 'Confirmed in sheet' : 'Sheet shows a different start');
+    } else if (op.kind === 'startClear'){
+      setLog(op.id, raceStartSv ? 'conflict' : 'synced', raceStartSv ? 'Sheet still has a start time' : 'Cleared');
+    }
+  }
+}
+async function sync(){
+  if (!CONFIG.SCRIPT_URL){ render(); return; }
+  if (syncing || !navigator.onLine){ render(); return; }
+  // Poison-pill guard: a corrupted op (bad leg/time from mangled storage) would
+  // make the sheet reject the whole batch forever. Drop invalid ops, keep the rest.
+  const bad = queue.filter(q => {
+    const legOK = q.kind === 'raceStart' || q.kind === 'startClear' || (q.leg >= 1 && q.leg <= 36);
+    const timeOK = (q.kind !== 'record' && q.kind !== 'raceStart') || !isNaN(new Date(q.whenISO).getTime());
+    const killsOK = q.kind !== 'kills' || (typeof q.kills === 'number' && q.kills >= 0);
+    return !(legOK && timeOK && killsOK);
+  });
+  if (bad.length){
+    queue = queue.filter(q => !bad.includes(q));
+    for (const q of bad) setLog(q.id, 'failed', 'Invalid entry — removed from the queue');
+    persist();
+  }
+  syncing = true; render();
+  try {
+    let resp;
+    if (queue.length){
+      const sent = queue.slice();
+      const payload = {
+        records: sent.filter(q => q.kind === 'record').map(q => ({ leg:q.leg, endTimeISO:q.whenISO })),
+        clears:  sent.filter(q => q.kind === 'clear').map(q => q.leg),
+        kills:   sent.filter(q => q.kind === 'kills').map(q => ({ leg:q.leg, kills:q.kills })),
+      };
+      const rs = sent.find(q => q.kind === 'raceStart');
+      const rc = sent.find(q => q.kind === 'startClear');
+      if (rs) payload.raceStart = rs.whenISO; else if (rc) payload.raceStart = 'CLEAR';
+      resp = await callSheet(payload);
+      if (resp && resp.ok){
+        applySheet(resp.state);
+        queue = queue.filter(q => !sent.some(s => s.id === q.id));
+        verifySent(sent);
+      } else {
+        throw new Error(resp && resp.error ? resp.error : 'Sheet returned an unknown response');
+      }
+    } else {
+      resp = await fetchJSON(CONFIG.SCRIPT_URL + '?key=' + encodeURIComponent(CONFIG.TEAM_KEY), { redirect: 'follow' });
+      if (resp && resp.ok) applySheet(resp.state);
+      else throw new Error(resp && resp.error ? resp.error : 'Could not read the sheet');
+    }
+  } catch (err) {
+    failStreak++;
+    let msg = String(err && err.message ? err.message : err);
+    if (err && err.name === 'AbortError') msg = 'Sheet is slow to respond — will keep retrying';
+    else if (/Unexpected token|JSON|SyntaxError/i.test(msg)) msg = 'Sheet URL returned a webpage instead of data — redeploy the Apps Script with access "Anyone"';
+    lastErr = navigator.onLine ? msg : 'No connection';
+    for (const q of queue) setLog(q.id, 'failed', lastErr + ' — will keep retrying');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(sync, Math.min(10000 * Math.pow(2, failStreak - 1), 120000));
+  } finally {
+    syncing = false; persist(); render();
+    // Ops enqueued while this sync was in flight would otherwise sit until the
+    // next user action — drain them now.
+    if (queue.length && !lastErr && navigator.onLine){
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(sync, 250);
+    }
+  }
+}
+window.addEventListener('online', () => { failStreak = 0; sync(); });
+window.addEventListener('offline', render);
+$('retryBtn').addEventListener('click', () => { failStreak = 0; sync(); });
+
+/* ================= Rendering ================= */
+function render(){
+  const now = new Date();
+  const started = !!effStart();
+  const cur = currentLeg();
+  const proj = projections();
+  const nextLeg = cur && cur.leg < 36 ? LEGS[cur.leg] : null;
+
+  if (started) $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
+  else $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : 'ready';
+
+  if (!cur){
+    $('nowLeg').textContent = 'FINISH';
+    $('nowState').textContent = 'Race complete';
+    $('nowRunner').textContent = 'Seaside 🎉';
+    $('nowElapsed').textContent = '—'; $('nowProj').textContent = '—';
+    $('nowDelta').textContent = '—'; $('nowDelta').className = '';
+    $('nowSub').innerHTML = 'All 36 legs recorded. <button id="adjStart">Adjust start</button>';
+  } else {
+    const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
+    $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
+    $('nowState').innerHTML = started ? 'On the road · ' + vanSpan(cur.van) : 'Pre-race';
+    $('nowRunner').textContent = dnn(cur);
+    if (started && s){
+      const d = fmtDelta(proj[cur.leg] - cur.predEnd);
+      $('nowElapsed').textContent = fmtDur(now - s);
+      $('nowProj').textContent = fmtT(proj[cur.leg]);
+      $('nowDelta').textContent = d.txt; $('nowDelta').className = d.cls;
+      $('nowSub').innerHTML = 'Took the handoff ' + fmtTS(s) + ' · plan ' + fmtT(cur.predEnd) +
+        ' · <button id="adjStart">Adjust start</button>';
+    } else {
+      $('nowElapsed').textContent = '—';
+      $('nowProj').textContent = fmtT(cur.predEnd);
+      $('nowDelta').textContent = '—'; $('nowDelta').className = '';
+      $('nowSub').textContent = 'Plan: ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' wave at Timberline.';
+    }
+  }
+
+  const hasDraft = !!draft;
+  $('confirmCard').classList.toggle('show', hasDraft);
+  $('plunger').style.display = hasDraft ? 'none' : '';
+  if (hasDraft){
+    const when = new Date(draft.whenISO);
+    if (draft.kind === 'start'){
+      $('confirmKind').textContent = 'Confirm race start';
+      $('confirmWho').textContent = 'Gun time — Timberline Lodge';
+    } else {
+      const L = LEGS[draft.leg - 1];
+      const N = draft.leg < 36 ? LEGS[draft.leg] : null;
+      $('confirmKind').textContent = N ? 'Confirm handoff' : 'Confirm finish';
+      $('confirmWho').textContent = N ? dn(L.runner) + ' → ' + dn(N.runner) + ' · end of leg ' + L.leg
+                                      : dn(L.runner) + ' → finish line · leg 36';
+    }
+    $('confirmTime').textContent = fmtTS(when);
+    $('confirmGo').textContent = 'Confirm ' + fmtTS(when);
+  } else if (!started){
+    $('plunger').disabled = false;
+    $('plunger').classList.add('startmode');
+    $('plungerLabel').textContent = '🏁 Start race';
+    $('plungerSub').textContent = 'press at the gun — time stamps instantly';
+  } else if (cur){
+    $('plunger').disabled = false;
+    $('plunger').classList.remove('startmode');
+    if (nextLeg){
+      const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
+      $('plungerLabel').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner);
+      $('plungerSub').textContent = swapEx
+        ? 'press at the van swap — ' + swapEx.name
+        : 'press the moment ' + dn(cur.runner) + ' crosses';
+    } else {
+      $('plungerLabel').textContent = dn(cur.runner) + ' → finish line';
+      $('plungerSub').textContent = 'press when ' + dn(cur.runner) + ' crosses in Seaside';
+    }
+  } else {
+    $('plunger').disabled = true;
+    $('plunger').classList.remove('startmode');
+    $('plungerLabel').textContent = 'Race complete 🎉';
+    $('plungerSub').textContent = '';
+  }
+
+  const upcoming = LEGS.filter(L => !actualEnd(L.leg) && (!cur || L.leg > cur.leg))
+                       .filter(L => !vanFilter || L.van === vanFilter).slice(0, 3);
+  $('nextUp').innerHTML = upcoming.length ? upcoming.map(L =>
+    '<div class="nextrow"><span class="legchip c' + L.van + '">L' + L.leg + '</span>' +
+    '<span class="who">' + esc(dnn(L)) + '</span>' +
+    '<span class="eta">ETA ' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</span></div>'
+  ).join('') : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
+
+  // team kills total
+  const totalKills = LEGS.reduce((a, L) => a + (killsFor(L.leg) || 0), 0);
+  $('killTotal').textContent = totalKills ? 'team roadkills: ' + totalKills : '';
+
+  // race timeline
+  const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
+  const exHTML = (x) => {
+    const done = x.afterLeg === 0 ? started : !!actualEnd(x.afterLeg);
+    const when = x.afterLeg === 0 ? (effStart() || RACE_PLANNED)
+                                  : (actualEnd(x.afterLeg) || proj[x.afterLeg]);
+    const isNext = nextEx && nextEx.afterLeg === x.afterLeg;
+    const ic = x.kind === 'start' ? '🏁' : x.kind === 'finish' ? '🎉' : '⇄';
+    const sub = x.kind === 'start' ? 'Race start'
+              : x.kind === 'finish' ? 'Finish line — Seaside'
+              : vanSpan(x.from) + ' hands off to ' + vanSpan(x.to);
+    const plan = x.afterLeg === 0 ? RACE_PLANNED : LEGS[x.afterLeg - 1].predEnd;
+    return '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
+      '<span class="ic">' + ic + '</span>' +
+      '<div><div class="name">' + x.name + '</div>' +
+      '<div class="after">' + sub + ' · <a href="' + x.url + '" target="_blank" rel="noopener">Maps ↗</a></div></div>' +
+      '<div><div class="when ' + (done ? 'done' : isNext ? 'next' : '') + '">' +
+      (done ? '✓ ' : 'ETA ') + dayTag(when) + fmtT(when) + '</div>' +
+      '<div class="plan">plan ' + dayTag(plan) + fmtT(plan) + '</div></div></div>';
+  };
+  let html = exHTML(EXCHANGES[0]);
+  for (const L of LEGS){
+    if (!vanFilter || L.van === vanFilter){
+      const end = actualEnd(L.leg);
+      const isCur = cur && cur.leg === L.leg;
+      const q = queuedFor(L.leg);
+      const kills = killsFor(L.leg);
+      let right;
+      if (end){
+        const d = fmtDelta(end - L.predEnd);
+        right = '<div class="t">' + dayTag(end) + fmtT(end) + '</div><div class="d ' + d.cls + '">' + d.txt +
+                (q ? ' <span class="tag q">QUEUED</span>' : '') +
+                (kills ? ' <span class="tag k">🪦 ' + kills + '</span>' : '') + '</div>';
+      } else if (isCur){
+        right = '<div class="t" style="color:var(--amber)">on the road</div>' +
+                '<div class="d">ETA ' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</div>';
+      } else {
+        right = '<div class="t" style="color:var(--faint)">ETA ' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</div>' +
+                '<div class="d">plan ' + dayTag(L.predEnd) + fmtT(L.predEnd) + '</div>';
+      }
+      const chase = '\u{1F3C3}\u{1F99E}'; // runner fleeing lobster — both vans (no sasquatch emoji exists)
+      html += '<div class="legrow van' + L.van + (end ? ' done' : '') + (isCur ? ' current' : '') + '">' +
+        '<button class="rowmain" data-leg="' + L.leg + '">' +
+        '<span class="num">L' + L.leg + '</span>' +
+        '<span class="mid"><div class="name">' + esc(dnn(L)) + '</div>' +
+        '<div class="meta">' + L.miles.toFixed(2) + ' mi</div></span>' +
+        '<span class="right">' + right + '</span></button>' +
+        (end ? '<button class="killbtn" data-leg="' + L.leg + '" aria-label="roadkills for leg ' + L.leg + '">' +
+               '<span>' + chase + '</span><b>' + (kills ? kills : '+') + '</b></button>' : '') +
+        '</div>';
+    }
+    const ex = EXCHANGES.find(x => x.afterLeg === L.leg);
+    if (ex) html += exHTML(ex);
+  }
+  $('timeline').innerHTML = html;
+
+  // history
+  $('histErr').classList.toggle('show', !!lastErr);
+  $('histErr').textContent = lastErr ? 'Last sync problem: ' + lastErr : '';
+  const icons = { synced:'✓', queued:'↻', failed:'✗', conflict:'⚠', local:'○' };
+  $('histList').innerHTML = log.length ? log.map(e =>
+    '<div class="histrow ' + e.status + '"><span class="ic">' + (icons[e.status] || '·') + '</span>' +
+    '<span class="lbl">' + esc(e.label) + '</span><span class="set">' + esc(e.set) + '</span>' +
+    '<span class="det">' + esc(e.detail) + '</span></div>'
+  ).join('') : '<div class="histrow local"><span class="ic">·</span><span class="lbl">No changes yet</span><span></span></div>';
+
+  // pill + footer
+  const pill = $('syncPill'), n = queue.length;
+  pill.className = '';
+  if (!CONFIG.SCRIPT_URL) $('syncText').textContent = 'Local only — no sheet URL';
+  else if (!navigator.onLine){ pill.classList.add('offline'); $('syncText').textContent = n ? 'Offline · ' + n + ' queued' : 'Offline'; }
+  else if (lastErr){ pill.classList.add('error'); $('syncText').textContent = n ? n + ' not logged — tap' : 'Sync error — tap'; }
+  else if (n || syncing){ pill.classList.add('pending'); $('syncText').textContent = (n || '') + ' syncing…'; }
+  else { pill.classList.add('live'); $('syncText').textContent = 'Live · synced'; }
+  $('lastSync').textContent = lastSyncAt ? fmtTS(new Date(lastSyncAt)) : 'never';
+}
+
+/* ================= History toggle, van filter, keep-awake ================= */
+function toggleHistory(){
+  const open = !$('history').classList.contains('show');
+  $('history').classList.toggle('show', open);
+  $('syncPill').setAttribute('aria-expanded', String(open));
+  if (open) $('history').scrollIntoView({ block:'nearest' });
+}
+$('syncPill').addEventListener('click', toggleHistory);
+$('histBtn').addEventListener('click', toggleHistory);
+
+document.querySelector('.seg').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-van]');
+  if (!b) return;
+  vanFilter = Number(b.dataset.van);
+  LS.set('h2c2_van', vanFilter);
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  render();
+});
+document.querySelectorAll('.seg button').forEach(b =>
+  b.setAttribute('aria-pressed', String(Number(b.dataset.van) === vanFilter)));
+
+let wakeLock = null;
+$('awakeBtn').addEventListener('click', async () => {
+  try {
+    if (wakeLock){ await wakeLock.release(); wakeLock = null; }
+    else if ('wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; render(); });
+    }
+    $('awakeBtn').setAttribute('aria-pressed', String(!!wakeLock));
+  } catch(e){}
+});
+
+/* ================= Battery-aware loop ================= */
+let tickId = null, tickCount = 0;
+function startLoop(){
+  if (tickId) return;
+  tickId = setInterval(() => {
+    render();
+    if (++tickCount % CONFIG.POLL_SEC === 0 && navigator.onLine && !queue.length) sync();
+  }, 1000);
+}
+function stopLoop(){ clearInterval(tickId); tickId = null; }
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible'){
+    startLoop(); failStreak = 0; sync();
+    if ($('awakeBtn').getAttribute('aria-pressed') === 'true' && !wakeLock && 'wakeLock' in navigator){
+      try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
+    }
+  } else stopLoop();
+});
+
+/* ================= Boot ================= */
+render();
+if (document.visibilityState === 'visible') startLoop();
+sync();
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
