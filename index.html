@@ -20,7 +20,7 @@
     --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;touch-action:manipulation}
   body{background:var(--bg);color:var(--ink);font-family:var(--sans);
     padding-bottom:max(24px, env(safe-area-inset-bottom));min-height:100vh}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -195,11 +195,20 @@
   .dlg-actions .ghost{border:1px solid var(--line);border-radius:12px;padding:13px 14px;color:var(--dim);font-weight:600}
   .dlg-actions .danger{color:var(--red)}
   #dlgKills{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
-  .killhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
-  .killhead b{font-family:var(--mono);font-size:26px}
-  .killrow{display:grid;grid-template-columns:52px 1fr 52px;gap:10px;align-items:center;margin-bottom:12px}
-  .killrow button{border:1px solid var(--line);border-radius:10px;padding:12px 0;font-size:18px;font-weight:800;color:var(--dim);background:var(--panel-2)}
-  .killrow input[type="range"]{width:100%;accent-color:var(--amber)}
+  .killhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+  .killwheel-wrap{position:relative;height:150px;margin-bottom:14px;overflow:hidden;border-radius:12px;
+    border:1px solid var(--line);background:var(--panel-2)}
+  .killwheel-wrap::before,.killwheel-wrap::after{content:'';position:absolute;left:0;right:0;height:55px;z-index:1;pointer-events:none}
+  .killwheel-wrap::before{top:0;background:linear-gradient(var(--panel-2),transparent)}
+  .killwheel-wrap::after{bottom:0;background:linear-gradient(transparent,var(--panel-2))}
+  .killwheel-highlight{position:absolute;left:8px;right:8px;top:50%;transform:translateY(-50%);height:40px;
+    border-radius:8px;background:color-mix(in srgb, var(--amber) 15%, transparent);border:1px solid color-mix(in srgb, var(--amber) 35%, transparent);pointer-events:none;z-index:1}
+  .killwheel{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding:55px 0}
+  .killwheel::-webkit-scrollbar{display:none}
+  .killwheel .kitem{height:40px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;
+    font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;color:var(--dim);transition:color .1s}
+  .killwheel .kitem.sel{color:var(--ink)}
   #killSave{width:100%;border:1px solid color-mix(in srgb, var(--amber) 45%, var(--line));color:var(--amber);
     font-weight:800;border-radius:12px;padding:12px 0;font-size:14px}
 
@@ -306,11 +315,10 @@
     <button class="ghost" id="dlgClose2" style="flex:1">Close</button>
   </div>
   <div id="dlgKills" hidden>
-    <div class="killhead"><span class="eyebrow">Roadkills (runners passed)</span><b id="killVal">0</b></div>
-    <div class="killrow">
-      <button id="killMinus" aria-label="one fewer kill">−</button>
-      <input type="range" id="killSlider" min="0" max="100" step="1" value="0" aria-label="kill count">
-      <button id="killPlus" aria-label="one more kill">+</button>
+    <div class="killhead"><span class="eyebrow">Roadkills (runners passed)</span></div>
+    <div class="killwheel-wrap">
+      <div class="killwheel-highlight"></div>
+      <div class="killwheel" id="killWheel" role="listbox" aria-label="kill count"></div>
     </div>
     <button id="killSave">Save roadkills</button>
   </div>
@@ -632,13 +640,35 @@ function openDlg(mode){
   }
   dlg.showModal();
 }
+const KILL_MAX = 50;
+const killWheel = $('killWheel');
+(function buildWheel(){
+  let h = '';
+  for (let i = 0; i <= KILL_MAX; i++) h += '<div class="kitem" data-v="' + i + '">' + i + '</div>';
+  killWheel.innerHTML = h;
+})();
 function renderKills(){
-  $('killVal').textContent = dlgKillsVal;
-  $('killSlider').value = Math.min(dlgKillsVal, 100);
+  killWheel.dataset.val = String(dlgKillsVal);
+  if (killWheel.querySelectorAll) {
+    killWheel.querySelectorAll('.kitem').forEach(el => el.classList.toggle('sel', Number(el.dataset.v) === dlgKillsVal));
+    const target = killWheel.children[dlgKillsVal];
+    if (target && target.scrollIntoView) target.scrollIntoView({ block:'center', behavior:'instant' });
+  }
 }
-$('killSlider').addEventListener('input', () => { dlgKillsVal = Number($('killSlider').value); renderKills(); });
-$('killMinus').addEventListener('click', () => { dlgKillsVal = Math.max(0, dlgKillsVal - 1); renderKills(); });
-$('killPlus').addEventListener('click', () => { dlgKillsVal = Math.min(300, dlgKillsVal + 1); renderKills(); });
+let killScrollTimer = null;
+killWheel.addEventListener('scroll', () => {
+  clearTimeout(killScrollTimer);
+  killScrollTimer = setTimeout(() => {
+    const mid = killWheel.scrollTop + killWheel.clientHeight / 2;
+    const idx = Math.round(mid / 40) - 1;
+    dlgKillsVal = Math.max(0, Math.min(KILL_MAX, idx));
+    killWheel.dataset.val = String(dlgKillsVal);
+    if (killWheel.querySelectorAll) killWheel.querySelectorAll('.kitem').forEach(el => el.classList.toggle('sel', Number(el.dataset.v) === dlgKillsVal));
+  }, 60);
+}, { passive: true });
+killWheel.addEventListener('input', () => {
+  dlgKillsVal = Math.max(0, Math.min(KILL_MAX, Number(killWheel.dataset.val) || 0));
+});
 $('killSave').addEventListener('click', () => { enqueueOp('kills', dlgMode.leg, null, dlgKillsVal); dlg.close(); });
 
 document.querySelector('#editDlg .nudges').addEventListener('click', (ev) => {

@@ -226,7 +226,7 @@ await A.press('plunger'); await A.confirm();                       // leg 4
 await A.press('plunger'); await A.confirm();                       // leg 5
 await A.tapLeg(3); await A.saveTime('15:05:00');                   // correct leg 3
 await A.tapKill(4);                                                // chase button on done leg 4
-for (let i = 0; i < 7; i++) A.byId('killPlus').fire('click');
+A.byId('killWheel').dataset.val = '7'; A.byId('killWheel').fire('input');
 await A.press('killSave');
 check('offline: nothing sent', A.net.calls.length === callsBefore);
 check('offline: 4 ops queued (correction replaced leg-3 record)', A.queue().length === 4, A.queue().map(q => q.kind));
@@ -363,13 +363,12 @@ check('lobster chase on every done leg, no gorilla', /\u{1F99E}/u.test(A.html('t
 await A.tapKill(5);                                  // completed leg → kills dialog
 check('kills dialog opens with kills visible, time editor hidden',
   A.byId('dlgKills').hidden === false && A.byId('dlgTimeWrap').hidden === true);
-A.byId('killSlider').value = '23';
-A.byId('killSlider').fire('input');
-check('slider drag updates the big number', String(A.text('killVal')) === '23', A.text('killVal'));
+A.byId('killWheel').dataset.val = '23'; A.byId('killWheel').fire('input');
+check('wheel sets the kill count', A.byId('killWheel').dataset.val === '23');
 await A.press('killSave');
-check('slider-entered kills reach the App Kills tab', W.ss.getSheetByName('App Kills').getRange(6, 2).getValue() === 23);
+check('wheel-entered kills reach the App Kills tab', W.ss.getSheetByName('App Kills').getRange(6, 2).getValue() === 23);
 await A.tapKill(5);
-check('reopening shows the saved count', String(A.text('killVal')) === '23', A.text('killVal'));
+check('reopening restores the saved count', A.byId('killWheel').dataset.val === '23');
 A.byId('dlgClose2').fire('click');
 await A.tapLeg(5);                                   // TIME dialog on same leg: no kills UI
 check('time dialog no longer contains kills entry', A.byId('dlgKills').hidden === true && A.byId('dlgTimeWrap').hidden === false);
