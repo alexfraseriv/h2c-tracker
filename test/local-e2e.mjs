@@ -214,46 +214,6 @@ check('App Kills tab created with header + rows at leg+1', !!ks &&
   ks.getRange(1, 1).getValue() === 'Leg' && ks.getRange(4, 2).getValue() === 9 && ks.getRange(20, 2).getValue() === 12);
 check('tracker tab untouched by kills', tr.getRange(8, 22).getValue() === false);
 
-console.log('— Planned schedule shift (passphrase-gated) —');
-{
-  const before = GET().state.legs.map(l => ({ s: l.predStart, e: l.predEnd }));
-  const durs = before.map(l => +new Date(l.e) - +new Date(l.s));
-
-  let x = POST({ planStart: '2026-09-05T12:45:00-07:00' });
-  check('shift refused without the passphrase', x.ok === false && /passphrase/i.test(x.error), x.error);
-
-  x = POST({ planStart: '2026-09-05T12:45:00-07:00', planKey: 'nope' });
-  check('shift refused with the wrong passphrase', x.ok === false && /passphrase/i.test(x.error), x.error);
-
-  // a recorded leg means the plan is history — refuse rather than rewrite it
-  POST({ records: [{ leg: 1, endTimeISO: '2026-08-28T20:53:00.000Z' }] });
-  x = POST({ planStart: '2026-09-05T12:45:00-07:00', planKey: 'sassyloveslarry' });
-  check('shift refused while a leg is recorded', x.ok === false && /already recorded/i.test(x.error), x.error);
-  POST({ clears: [1] });
-
-  const target = new Date('2026-09-05T12:45:00-07:00');
-  const delta = +target - +new Date(before[0].s);
-  x = POST({ planStart: target.toISOString(), planKey: 'sassyloveslarry' });
-  check('shift accepted with the passphrase', x.ok === true, x.error);
-
-  const after = x.state.legs.map(l => ({ s: l.predStart, e: l.predEnd }));
-  check('leg 1 planned start lands exactly on the target', +new Date(after[0].s) === +target);
-  check('every leg moved by the same delta', after.every((l, i) =>
-    +new Date(l.s) - +new Date(before[i].s) === delta &&
-    +new Date(l.e) - +new Date(before[i].e) === delta));
-  check('every leg keeps its planned duration', after.every((l, i) =>
-    +new Date(l.e) - +new Date(l.s) === durs[i]));
-  check('the DO-NOT-MODIFY mirror column moved with it',
-    +ss.getSheetByName('Time Tracker').getRange(6, 21).getValue() === +target);
-  check('recorded times and roster untouched', x.state.legs[0].runner === 'Matt McFarland' &&
-    x.state.legs.every(l => l.actEnd === null));
-
-  // put the replica back so later checks see the shipped schedule
-  POST({ planStart: before[0].s, planKey: 'sassyloveslarry' });
-  check('shift is reversible — schedule restored', GET().state.legs.every((l, i) =>
-    l.predStart === before[i].s && l.predEnd === before[i].e));
-}
-
 console.log('— Failure behavior —');
 r = POST({ records: [{ leg: 4, endTimeISO: '2026-08-28T23:00:00.000Z' }, { leg: 99, endTimeISO: t1 }] });
 check('bad leg in batch → ok:false with message', r.ok === false && /Bad leg/.test(r.error));

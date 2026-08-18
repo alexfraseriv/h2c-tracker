@@ -19,10 +19,6 @@
 const CONFIG = {
   SPREADSHEET_ID: '',                 // leave blank when bound to the sheet
   TEAM_KEY: 'seaside-or-bust-2026',   // must match index.html
-  // Second secret, required on top of TEAM_KEY for the one destructive op
-  // (shifting the planned schedule). Obfuscation, not security: anyone who can
-  // read index.html can read it. It exists so a mis-tap can't rewrite 72 cells.
-  PLAN_KEY: 'sassyloveslarry',
   MARKERS: {
     endEdit: 'End Time (EDIT THESE CELLS)',
     actStart: 'Start Time (DO NOT MODIFY)',
@@ -64,13 +60,6 @@ function doPost(e) {
       clears.forEach((leg) => clearLeg_(Number(leg)));
       (body.kills || []).forEach((k) => setKills_(Number(k.leg), k.kills));
 
-      // Shift the whole planned schedule. Guarded: needs PLAN_KEY, and refuses
-      // once any leg is recorded — mid-race the plan is history, not a plan.
-      if (body.planStart) {
-        if (body.planKey !== CONFIG.PLAN_KEY) throw new Error('Wrong passphrase for the planned schedule');
-        shiftPlan_(String(body.planStart));
-      }
-
       if (body.raceStart === 'CLEAR') {
         PropertiesService.getScriptProperties().deleteProperty('RACE_START_ACTUAL');
       } else if (body.raceStart) {
@@ -108,47 +97,6 @@ function clearLeg_(leg) {
   const row = legRow_(L, leg);
   L.sheet.getRange(row, L.cols.endEdit).clearContent();
   if (L.cols.check) L.sheet.getRange(row, L.cols.check).setValue(false);
-}
-
-/** Move every planned start/end by one delta, so each leg keeps its exact
- *  planned duration and the team's pace work survives. Only the predicted
- *  block moves; recorded times and the tracker's own columns are untouched. */
-function shiftPlan_(newStartISO) {
-  const target = new Date(newStartISO);
-  if (isNaN(target.getTime())) throw new Error('Bad planned start time');
-
-  const L = layout_();
-  const c = L.cols;
-  if (!c.predStart || !c.predEnd) throw new Error('Sheet has no predicted Start Time / End Time columns');
-
-  const n = CONFIG.LEG_COUNT;
-  const starts = L.sheet.getRange(L.firstRow, c.predStart, n, 1).getValues();
-  const ends = L.sheet.getRange(L.firstRow, c.predEnd, n, 1).getValues();
-  if (!(starts[0][0] instanceof Date)) throw new Error('Leg 1 has no planned start time to shift from');
-
-  if (c.check) {
-    const checks = L.sheet.getRange(L.firstRow, c.check, n, 1).getValues();
-    const run = checks.filter((r) => r[0] === true).length;
-    if (run) throw new Error('Cannot shift the plan: ' + run + ' leg(s) are already recorded. Clear them first.');
-  }
-
-  const delta = target.getTime() - starts[0][0].getTime();
-  if (!delta) return 0;
-  const bump = (rows) => rows.map((r) =>
-    [r[0] instanceof Date ? new Date(r[0].getTime() + delta) : r[0]]);
-
-  // "Start Time (DO NOT MODIFY)" mirrors the planned start on this sheet; it
-  // only moves where it actually still mirrors, so a repurposed column is safe.
-  if (c.actStart) {
-    const mirror = L.sheet.getRange(L.firstRow, c.actStart, n, 1).getValues();
-    const mirrors = mirror.every((r, i) =>
-      !(r[0] instanceof Date) || !(starts[i][0] instanceof Date) ||
-      r[0].getTime() === starts[i][0].getTime());
-    if (mirrors) L.sheet.getRange(L.firstRow, c.actStart, n, 1).setValues(bump(mirror));
-  }
-  L.sheet.getRange(L.firstRow, c.predStart, n, 1).setValues(bump(starts));
-  L.sheet.getRange(L.firstRow, c.predEnd, n, 1).setValues(bump(ends));
-  return delta;
 }
 
 /* --------------------------------------------------------------- state */
