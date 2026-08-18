@@ -111,10 +111,22 @@
   #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
 
+  #gearBtn{width:38px;height:38px;border-radius:var(--r-pill);border:1px solid var(--line);
+    background:var(--panel);font-size:var(--t-lg);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
+  #gearBtn[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
+  #gearMenu{position:absolute;top:100%;right:var(--s4);z-index:19;display:none;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);
+    box-shadow:var(--shadow);min-width:180px;overflow:hidden}
+  #gearMenu:not([hidden]){display:block}
+  .gear-inner button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    padding:var(--s3) var(--s4);min-height:var(--tap);font-size:var(--t-md);font-weight:600;
+    border-bottom:1px solid var(--line-soft);color:var(--ink)}
+  .gear-inner button:last-child{border-bottom:0}
+  .gear-inner button:active{background:var(--panel-2)}
+  .gear-val{font-family:var(--mono);font-size:var(--t-sm);color:var(--dim);font-weight:700}
+
   /* who is running right now — slides in once the bib card scrolls away */
-  #nowStrip{max-width:520px;margin:0 auto;overflow:hidden;max-height:0;
-    transition:max-height .22s ease}
-  header.condensed #nowStrip{max-height:46px}
+  #nowStrip{max-width:520px;margin:0 auto}
   .strip-in{display:flex;align-items:center;gap:var(--s2);padding:0 var(--s4) 10px;min-width:0}
   #nowStrip .legchip{font-size:var(--t-xs);padding:3px 7px;min-width:32px;text-align:center;flex:none}
   #stripWho{font-weight:700;font-size:var(--t-base);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
@@ -293,14 +305,6 @@
   .exline.nextex{border-style:solid;border-color:color-mix(in srgb, var(--accent) 45%, var(--line));
     background:color-mix(in srgb, var(--accent) 6%, transparent)}
 
-  /* ================= footer ================= */
-  footer{max-width:520px;margin:var(--s4) auto 0;padding:0 var(--s4);
-    display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
-  footer button{color:var(--dim);border:1px solid var(--line);border-radius:var(--r-md);
-    padding:0 var(--s3);min-height:40px;font-size:var(--t-sm);font-weight:600;background:var(--panel);flex:1}
-  footer button[aria-pressed="true"]{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 45%, var(--line));
-    background:color-mix(in srgb, var(--accent) 8%, transparent)}
-
   /* ================= leg detail dialog ================= */
   dialog{border:1px solid var(--line);border-radius:var(--r-xl);background:var(--panel);color:var(--ink);
     width:min(92vw,400px);padding:var(--s5);margin:auto;position:fixed;inset:0;
@@ -342,13 +346,14 @@
   .killstep button:disabled{color:var(--faint);opacity:.5}
   #killWheel{text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
     font-size:40px;font-weight:800;line-height:1;letter-spacing:-.02em}
+  #killWheel .kico{display:block;font-size:28px;margin-bottom:var(--s1);letter-spacing:0;
+    transition:transform .15s ease}
   #killWheel .unit{display:block;font-family:var(--sans);font-size:var(--t-xs);font-weight:700;
     letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:var(--s1)}
   .killquick{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s2);margin-bottom:var(--s3)}
   .killquick button{min-height:40px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2);
     font-family:var(--mono);font-size:var(--t-md);font-weight:700;color:var(--dim)}
-  .killquick button[aria-pressed="true"]{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 50%, var(--line));
-    background:color-mix(in srgb, var(--accent) 10%, transparent)}
+  .killquick .kreset{color:var(--faint);font-family:var(--sans);font-size:var(--t-sm);letter-spacing:.04em}
   #killSave{width:100%;background:var(--accent-fill);color:var(--accent-ink);
     font-weight:800;border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
 
@@ -363,9 +368,20 @@
       <span class="wordmark">H2C</span>
       <span id="raceClock" class="mono" aria-label="race clock">--:--:--</span>
     </div>
-    <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Sync status and change history">
-      <span class="dot"></span><span id="syncBadge"></span>
-    </button>
+    <div style="display:flex;align-items:center;gap:var(--s2)">
+      <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Sync status and change history">
+        <span class="dot"></span><span id="syncBadge"></span>
+      </button>
+      <button id="gearBtn" aria-label="Settings" aria-expanded="false">⚙</button>
+    </div>
+  </div>
+
+  <div id="gearMenu" hidden>
+    <div class="gear-inner">
+      <button id="themeItem"><span>Theme</span><span id="themeVal" class="gear-val">auto</span></button>
+      <button id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="gear-val">off</span></button>
+      <button id="histItem">History</button>
+    </div>
   </div>
 
   <div id="nowStrip" aria-hidden="true">
@@ -447,11 +463,6 @@
   </section>
 </main>
 
-<footer>
-  <button id="themeBtn">Theme: auto</button>
-  <button id="awakeBtn" aria-pressed="false">Keep awake</button>
-  <button id="histBtn">History</button>
-</footer>
 
 <dialog id="editDlg" tabindex="-1">
   <h2 id="dlgTitle">Leg</h2>
@@ -480,9 +491,9 @@
       <div id="killWheel" role="status" aria-live="polite" aria-label="roadkill count">0<span class="unit">roadkills</span></div>
       <button id="killPlus" aria-label="one more roadkill">+</button>
     </div>
-    <div class="killquick" id="killQuick" role="group" aria-label="quick set">
-      <button data-k="0">0</button><button data-k="1">1</button><button data-k="3">3</button>
-      <button data-k="5">5</button><button data-k="10">10</button>
+    <div class="killquick" id="killQuick" role="group" aria-label="quick add">
+      <button data-k="0" class="kreset">Reset</button><button data-k="1">+1</button><button data-k="3">+3</button>
+      <button data-k="5">+5</button><button data-k="10">+10</button>
     </div>
     <button id="killSave">Save roadkills</button>
   </div>
@@ -814,13 +825,21 @@ function openDlg(mode){
 }
 const KILL_MAX = 99;
 const killWheel = $('killWheel');
+function killIcon(n){
+  if (n === 0) return '\u{1F3C3}';         // runner — nobody caught yet
+  if (n <= 2) return '\u{1F3C3}\u{1F4A8}'; // runner + wind — warming up
+  if (n <= 5) return '\u{1F525}';           // fire — on a streak
+  if (n <= 10) return '\u{1F525}\u{1F525}'; // double fire
+  if (n <= 20) return '\u{2694}️';     // crossed swords — slaying
+  if (n <= 35) return '\u{1F451}';          // crown — royalty
+  return '\u{1F480}';                       // skull — total carnage
+}
 function renderKills(){
   killWheel.dataset.val = String(dlgKillsVal);
-  killWheel.innerHTML = dlgKillsVal + '<span class="unit">roadkill' + (dlgKillsVal === 1 ? '' : 's') + '</span>';
+  killWheel.innerHTML = '<span class="kico">' + killIcon(dlgKillsVal) + '</span>' +
+    dlgKillsVal + '<span class="unit">roadkill' + (dlgKillsVal === 1 ? '' : 's') + '</span>';
   $('killMinus').disabled = dlgKillsVal <= 0;
   $('killPlus').disabled = dlgKillsVal >= KILL_MAX;
-  document.querySelectorAll('#killQuick button').forEach(b =>
-    b.setAttribute('aria-pressed', String(Number(b.dataset.k) === dlgKillsVal)));
 }
 function setKills(n){
   dlgKillsVal = Math.max(0, Math.min(KILL_MAX, Math.round(Number(n)) || 0));
@@ -830,7 +849,9 @@ $('killMinus').addEventListener('click', () => setKills(dlgKillsVal - 1));
 $('killPlus').addEventListener('click', () => setKills(dlgKillsVal + 1));
 $('killQuick').addEventListener('click', (ev) => {
   const b = ev.target.closest('button[data-k]');
-  if (b) setKills(b.dataset.k);
+  if (!b) return;
+  const v = Number(b.dataset.k);
+  setKills(v === 0 ? 0 : dlgKillsVal + v);
 });
 // External writes (tests, restores) come in through dataset.val + an input event.
 killWheel.addEventListener('input', () => setKills(killWheel.dataset.val));
@@ -1104,8 +1125,9 @@ function render(){
   ).join('') : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
   // team kills total
-  const totalKills = LEGS.reduce((a, L) => a + (killsFor(L.leg) || 0), 0);
-  $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' team roadkills' : '';
+  let totalKills = 0, v1Kills = 0, v2Kills = 0;
+  for (const L of LEGS){ const k = killsFor(L.leg) || 0; totalKills += k; if (L.van === 1) v1Kills += k; else v2Kills += k; }
+  $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' total · <span class="v1">' + v1Kills + ' V1</span> · <span class="v2">' + v2Kills + ' V2</span>' : '';
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
@@ -1188,25 +1210,32 @@ function render(){
   $('lastSync').textContent = lastSyncAt ? fmtTS(new Date(lastSyncAt)) : 'never';
 }
 
-/* ================= History toggle, van filter, keep-awake ================= */
+/* ================= History toggle, gear menu, theme, keep-awake ================= */
 function setHistory(open){
   $('history').classList.toggle('show', open);
   $('syncPill').setAttribute('aria-expanded', String(open));
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-$('histBtn').addEventListener('click', () => {
+
+function setGear(open){
+  $('gearMenu').hidden = !open;
+  $('gearBtn').setAttribute('aria-expanded', String(open));
+}
+$('gearBtn').addEventListener('click', () => setGear($('gearMenu').hidden));
+$('histItem').addEventListener('click', () => {
+  setGear(false);
   toggleHistory();
   if ($('history').classList.contains('show')) window.scrollTo({ top: 0, behavior: 'smooth' });
 });
-// The panel hangs off the header, so a tap anywhere else should put it away.
 document.addEventListener('click', (ev) => {
-  if (!$('history').classList.contains('show')) return;
   const t = ev.target;
-  if (t && t.closest && (t.closest('#history') || t.closest('#syncPill') || t.closest('#histBtn'))) return;
-  setHistory(false);
+  if (t && t.closest){
+    if (!$('gearMenu').hidden && !t.closest('#gearMenu') && !t.closest('#gearBtn')) setGear(false);
+    if ($('history').classList.contains('show') && !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#histItem')) setHistory(false);
+  }
 });
-document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape'){ setHistory(false); setGear(false); } });
 
 /* ================= theme ================= */
 const THEMES = ['auto', 'light', 'dark'];
@@ -1217,25 +1246,14 @@ function applyTheme(){
     if (theme === 'auto') root.removeAttribute('data-theme');
     else root.setAttribute('data-theme', theme);
   }
-  $('themeBtn').textContent = 'Theme: ' + theme;
-  $('themeBtn').setAttribute('aria-pressed', String(theme !== 'auto'));
+  $('themeVal').textContent = theme;
 }
-$('themeBtn').addEventListener('click', () => {
+$('themeItem').addEventListener('click', () => {
   theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
   LS.set('h2c2_theme', theme);
   applyTheme();
 });
 applyTheme();
-
-/* Once the bib card scrolls away the header carries the runner instead. */
-(function condensedHeader(){
-  const bib = document.querySelector('.bib'), head = $('topbar');
-  if (!bib || !head.classList || typeof IntersectionObserver === 'undefined') return;
-  new IntersectionObserver(
-    ([e]) => head.classList.toggle('condensed', !e.isIntersecting),
-    { threshold: 0 }
-  ).observe(bib);
-})();
 
 document.querySelector('.seg').addEventListener('click', (ev) => {
   const b = ev.target.closest('button[data-van]');
@@ -1249,14 +1267,15 @@ document.querySelectorAll('.seg button').forEach(b =>
   b.setAttribute('aria-pressed', String(Number(b.dataset.van) === vanFilter)));
 
 let wakeLock = null;
-$('awakeBtn').addEventListener('click', async () => {
+function updateAwakeLabel(){ $('awakeVal').textContent = wakeLock ? 'on' : 'off'; }
+$('awakeItem').addEventListener('click', async () => {
   try {
     if (wakeLock){ await wakeLock.release(); wakeLock = null; }
     else if ('wakeLock' in navigator){
       wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; render(); });
+      wakeLock.addEventListener('release', () => { wakeLock = null; updateAwakeLabel(); render(); });
     }
-    $('awakeBtn').setAttribute('aria-pressed', String(!!wakeLock));
+    updateAwakeLabel();
   } catch(e){}
 });
 
@@ -1273,7 +1292,7 @@ function stopLoop(){ clearInterval(tickId); tickId = null; }
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible'){
     startLoop(); failStreak = 0; sync();
-    if ($('awakeBtn').getAttribute('aria-pressed') === 'true' && !wakeLock && 'wakeLock' in navigator){
+    if ($('awakeVal').textContent === 'on' && !wakeLock && 'wakeLock' in navigator){
       try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
     }
   } else stopLoop();
