@@ -660,6 +660,8 @@ function fmtDelta(ms){
   const t = mins >= 60 ? Math.floor(mins/60) + 'h ' + (mins%60) + 'm' : mins + 'm';
   return ms < 0 ? { txt: t + ' ahead', cls:'ahead' } : { txt: t + ' behind', cls:'behind' };
 }
+// Runner fleeing lobster — the team's roadkill mark. Never a headstone.
+const CHASE = '\u{1F3C3}\u{1F99E}';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const vanSpan = v => '<span class="v' + v + '">Van ' + v + '</span>';
 
@@ -685,7 +687,7 @@ function enqueueOp(kind, leg, when, kills){
                 kind === 'clear' ? 'Clear leg ' + leg :
                 kind === 'kills' ? 'Leg ' + leg + ' roadkills — ' + who :
                 'Leg ' + leg + ' — ' + who;
-  const setStr = kind === 'kills' ? '🪦 ' + kills : (when ? dayTag(when) + fmtTS(when) : '—');
+  const setStr = kind === 'kills' ? CHASE + ' ' + kills : (when ? dayTag(when) + fmtTS(when) : '—');
   addLog(id, label, setStr, CONFIG.SCRIPT_URL ? 'queued' : 'local',
          CONFIG.SCRIPT_URL ? 'Saved on this phone — sending to sheet…' : 'No sheet URL configured — stored on this phone only');
   persist(); render(); sync();
@@ -1103,7 +1105,7 @@ function render(){
 
   // team kills total
   const totalKills = LEGS.reduce((a, L) => a + (killsFor(L.leg) || 0), 0);
-  $('killTotal').innerHTML = totalKills ? '\u{1F3C3}\u{1F99E} ' + totalKills + ' team roadkills' : '';
+  $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' team roadkills' : '';
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
@@ -1144,7 +1146,6 @@ function render(){
         right = '<div class="t pend">ETA ' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</div>' +
                 '<div class="d">planned ' + dayTag(L.predEnd) + fmtT(L.predEnd) + '</div>';
       }
-      const chase = '\u{1F3C3}\u{1F99E}'; // runner fleeing lobster — both vans (no sasquatch emoji exists)
       html += '<div class="legrow van' + L.van + (end ? ' done' : '') + (isCur ? ' current' : '') + '">' +
         '<button class="rowmain" data-leg="' + L.leg + '">' +
         '<span class="num">L' + L.leg + '</span>' +
@@ -1153,7 +1154,7 @@ function render(){
         '<span class="right">' + right + '</span></button>' +
         (end ? '<button class="killbtn"' + (kills == null ? ' data-empty="1"' : '') + ' data-leg="' + L.leg +
                '" aria-label="' + (kills == null ? 'add roadkills for leg ' + L.leg : kills + ' roadkills on leg ' + L.leg) + '">' +
-               '<span class="kico">' + chase + '</span><b>' + (kills == null ? '+' : kills) + '</b></button>' : '') +
+               '<span class="kico">' + CHASE + '</span><b>' + (kills == null ? '+' : kills) + '</b></button>' : '') +
         '</div>';
     }
     const ex = EXCHANGES.find(x => x.afterLeg === L.leg);
