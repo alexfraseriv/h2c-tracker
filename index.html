@@ -44,7 +44,7 @@
       color-scheme:light;
       --bg:#f2f4f8; --panel:#ffffff; --panel-2:#f1f3f7; --panel-3:#e7eaf1;
       --line:#d9dee7; --line-soft:#e8ebf1;
-      --ink:#141821; --dim:#59626f; --faint:#6b7480;
+      --ink:#141821; --dim:#59626f; --faint:#616a74;
       --accent:#8a5a00; --accent-fill:#ffc53d; --accent-ink:#1a1503; --accent-deep:#d19d21;
       --good:#0f8043; --good-fill:#2bbd6d; --good-ink:#04160c; --good-deep:#178a50;
       --bad:#c62828;
@@ -58,7 +58,7 @@
     color-scheme:light;
     --bg:#f2f4f8; --panel:#ffffff; --panel-2:#f1f3f7; --panel-3:#e7eaf1;
     --line:#d9dee7; --line-soft:#e8ebf1;
-    --ink:#141821; --dim:#59626f; --faint:#6b7480;
+    --ink:#141821; --dim:#59626f; --faint:#616a74;
     --accent:#8a5a00; --accent-fill:#ffc53d; --accent-ink:#1a1503; --accent-deep:#d19d21;
     --good:#0f8043; --good-fill:#2bbd6d; --good-ink:#04160c; --good-deep:#178a50;
     --bad:#c62828;
@@ -83,7 +83,7 @@
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
   /* ================= sticky top bar ================= */
-  header{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 96%, transparent);
+  header{position:sticky;top:0;z-index:20;background:var(--bg);
     -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
@@ -139,6 +139,10 @@
   #stripMeta .sep{color:var(--faint);padding:0 2px}
 
   /* ================= sync + history panel ================= */
+  /* Swallows the dismissing tap so it cannot also arm a handoff on the
+     plunger the panel is covering. */
+  #scrim{position:fixed;inset:0;z-index:18;background:transparent}
+  #scrim[hidden]{display:none}
   #history{position:absolute;top:100%;left:0;right:0;z-index:19;display:none;
     background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);
     max-height:min(80vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -320,7 +324,8 @@
     padding:10px var(--s3);margin:var(--s2) 0 var(--s3);border:1px dashed var(--line);border-radius:var(--r-md);
     background:color-mix(in srgb, var(--panel) 50%, transparent)}
   .exline .ic{font-size:var(--t-base);text-align:center;line-height:1}
-  .exline .name{font-weight:700;font-size:var(--t-md)}
+  .exline .exmid{min-width:0}
+  .exline .name{font-weight:700;font-size:var(--t-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .exline .after{font-size:var(--t-xs);color:var(--faint);margin-top:1px;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis}
   .exline .after a{font-size:var(--t-xs)}
@@ -370,12 +375,13 @@
     font-size:var(--t-2xl);font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center}
   .killstep button:active{background:var(--panel-3)}
   .killstep button:disabled{color:var(--faint);opacity:.5}
-  #killWheel{text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  .killmedal{text-align:center;font-size:var(--t-xs);font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim);margin:var(--s2) 0 var(--s3);
+    overflow-wrap:anywhere;min-height:1em}
+  #killWheel{min-width:0;text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
     font-size:40px;font-weight:800;line-height:1;letter-spacing:-.02em}
   #killWheel .kico{display:block;font-size:28px;margin-bottom:var(--s1);letter-spacing:0;
     transition:transform .15s ease}
-  #killWheel .unit{display:block;font-family:var(--sans);font-size:var(--t-xs);font-weight:700;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:var(--s1)}
   .killquick{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s2);margin-bottom:var(--s3)}
   .killquick button{min-height:40px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2);
     font-family:var(--mono);font-size:var(--t-md);font-weight:700;color:var(--dim)}
@@ -393,7 +399,7 @@
   <div class="topbar">
     <div class="ident">
       <div class="tstat">
-        <span class="tlabel">Elapsed</span>
+        <span class="tlabel" id="clockLbl">Elapsed</span>
         <span id="raceClock" class="mono">--:--:--</span>
       </div>
       <button id="finishChip" class="tstat" aria-label="Projected finish — tap for vs planned">
@@ -439,6 +445,8 @@
     </div>
   </div>
 </header>
+
+<div id="scrim" hidden></div>
 
 <main>
   <section class="bib" aria-labelledby="nowRunner">
@@ -523,9 +531,10 @@
     </div>
     <div class="killstep">
       <button id="killMinus" aria-label="one fewer roadkill">−</button>
-      <div id="killWheel" role="status" aria-live="polite" aria-label="roadkill count">0<span class="unit">roadkills</span></div>
+      <div id="killWheel" role="status" aria-live="polite" aria-label="roadkill count">0</div>
       <button id="killPlus" aria-label="one more roadkill">+</button>
     </div>
+    <div id="killMedal" class="killmedal"></div>
     <div class="killquick" id="killQuick" role="group" aria-label="quick add">
       <button data-k="0" class="kreset">Reset</button><button data-k="1">+1</button><button data-k="3">+3</button>
       <button data-k="5">+5</button><button data-k="10">+10</button>
@@ -747,6 +756,22 @@ function enqueueOp(kind, leg, when, kills){
   persist(); render(); sync();
 }
 
+/* A handoff cannot land before the previous one, and cannot be in the future
+   beyond a minute of slop. Without this the nudges walk the draft under the
+   previous leg's recorded end and commit a negative-duration leg to the sheet. */
+function draftBounds(d){
+  if (!d) return null;
+  const floor = d.kind === 'start' ? null
+              : d.leg === 1 ? (effStart() || null)
+              : actualEnd(d.leg - 1);
+  return { min: floor ? +floor + 1000 : -Infinity, max: Date.now() + 60000 };
+}
+function clampDraft(ms){
+  const b = draftBounds(draft);
+  if (!b) return ms;
+  return Math.min(Math.max(ms, b.min), b.max);
+}
+
 /* ---- plunger → stamp → confirm ---- */
 const $ = id => document.getElementById(id);
 $('plunger').addEventListener('click', () => {
@@ -770,7 +795,7 @@ $('confirmCancel').addEventListener('click', () => { draft = null; persist(); re
 document.querySelector('#confirmCard .nudges').addEventListener('click', (ev) => {
   const b = ev.target.closest('button[data-n]');
   if (!b || !draft) return;
-  draft.whenISO = new Date(+new Date(draft.whenISO) + Number(b.dataset.n) * 1000).toISOString();
+  draft.whenISO = new Date(clampDraft(+new Date(draft.whenISO) + Number(b.dataset.n) * 1000)).toISOString();
   persist(); render();
 });
 
@@ -902,8 +927,8 @@ function killFlair(n){
 function renderKills(){
   killWheel.dataset.val = String(dlgKillsVal);
   const [ico, phrase] = killFlair(dlgKillsVal);
-  killWheel.innerHTML = '<span class="kico">' + ico + '</span>' +
-    dlgKillsVal + '<span class="unit">' + phrase + '</span>';
+  killWheel.innerHTML = '<span class="kico">' + ico + '</span>' + dlgKillsVal;
+  $('killMedal').textContent = phrase;
   $('killMinus').disabled = dlgKillsVal <= 0;
   $('killPlus').disabled = dlgKillsVal >= KILL_MAX;
 }
@@ -949,6 +974,13 @@ $('timeline').addEventListener('click', (ev) => {
   if (kb) return openDlg({ kind:'kills', leg: Number(kb.dataset.leg) });
   const row = ev.target.closest('.rowmain');
   if (row) openDlg({ kind:'leg', leg: Number(row.dataset.leg) });
+});
+$('nextUp').addEventListener('click', (ev) => {
+  if (!ev.target.closest || !ev.target.closest('#clearVan')) return;
+  vanFilter = 0;
+  LS.set('h2c2_van', 0);
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(Number(x.dataset.van) === 0)));
+  render();
 });
 $('nowSub').addEventListener('click', (ev) => {
   if (ev.target.closest('#adjStart')) openDlg({ kind:'start' });
@@ -1091,19 +1123,28 @@ function render(){
   const teamOff = cur ? proj[cur.leg] - cur.predEnd
                       : (actualEnd(36) ? actualEnd(36) - LEGS[35].predEnd : null);
   const seaside = actualEnd(36) || proj[36];
-  if (showDelta && teamOff != null){
+  if (showDelta && started && teamOff != null){
     const td = fmtDelta(teamOff);
     $('finishLbl').textContent = 'Vs planned';
     $('finishVal').textContent = td.txt;
     $('finishChip').className = 'tstat ' + td.cls;
+  } else if (showDelta){
+    $('finishLbl').textContent = 'Vs planned';
+    $('finishVal').textContent = 'not started';
+    $('finishChip').className = 'tstat';
   } else {
-    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : 'Finish';
+    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned fin';
     $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
     $('finishChip').className = 'tstat';
   }
 
-  if (started) $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
-  else $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : 'ready';
+  if (started){
+    $('clockLbl').textContent = cur ? 'Elapsed' : 'Final';
+    $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
+  } else {
+    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until gun' : 'Ready';
+    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : '--:--:--';
+  }
 
   if (!cur){
     $('nowLeg').textContent = 'FINISH';
@@ -1175,6 +1216,12 @@ function render(){
     }
     $('confirmTime').textContent = fmtTS(when);
     $('confirmGo').textContent = 'Confirm ' + fmtTS(when);
+    // Let the limit be felt on the button before Confirm can commit past it.
+    const bounds = draftBounds(draft);
+    document.querySelectorAll('#confirmCard .nudges button').forEach(b => {
+      const n = Number(b.dataset.n) * 1000;
+      b.disabled = bounds && (n < 0 ? +when + n < bounds.min : +when + n > bounds.max);
+    });
   } else if (!started){
     $('plunger').disabled = false;
     $('plunger').classList.add('startmode');
@@ -1202,11 +1249,17 @@ function render(){
 
   const upcoming = LEGS.filter(L => !actualEnd(L.leg) && (!cur || L.leg > cur.leg))
                        .filter(L => !vanFilter || L.van === vanFilter).slice(0, 3);
+  const legsLeft = LEGS.filter(L => !actualEnd(L.leg)).length;
+  const vanDoneOnly = !upcoming.length && vanFilter && legsLeft > 0;
   $('nextUp').innerHTML = upcoming.length ? upcoming.map(L =>
     '<div class="nextrow"><span class="legchip c' + L.van + '">L' + L.leg + '</span>' +
     '<span class="who">' + esc(dnn(L)) + '</span>' +
     '<span class="eta">ETA <b>' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</b></span></div>'
-  ).join('') : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
+  ).join('') : vanDoneOnly
+    ? '<button class="nextrow" id="clearVan"><span class="who">Van ' + vanFilter + ' is done — ' +
+      legsLeft + ' leg' + (legsLeft === 1 ? '' : 's') + ' still out there</span>' +
+      '<span class="eta">show all ↗</span></button>'
+    : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
   // team kills total
   let totalKills = 0, v1Kills = 0, v2Kills = 0;
@@ -1227,7 +1280,7 @@ function render(){
     const plan = x.afterLeg === 0 ? RACE_PLANNED : LEGS[x.afterLeg - 1].predEnd;
     return '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
       '<span class="ic">' + ic + '</span>' +
-      '<div><div class="name">' + x.name + '</div>' +
+      '<div class="exmid"><div class="name">' + esc(x.name) + '</div>' +
       '<div class="after">' + sub + ' · <a href="' + x.url + '" target="_blank" rel="noopener">Maps ↗</a></div></div>' +
       '<div><div class="when ' + (done ? 'done' : isNext ? 'next' : '') + '">' +
       (done ? '✓ ' : 'ETA ') + dayTag(when) + fmtT(when) + '</div>' +
@@ -1237,7 +1290,7 @@ function render(){
   for (const L of LEGS){
     if (!vanFilter || L.van === vanFilter){
       const end = actualEnd(L.leg);
-      const isCur = cur && cur.leg === L.leg;
+      const isCur = started && cur && cur.leg === L.leg;
       const q = queuedFor(L.leg);
       const kills = killsFor(L.leg);
       // Every leg reads the same way: when it starts, when it ends, how long it
@@ -1262,10 +1315,10 @@ function render(){
           '<span class="rtop"><span class="who"><span class="name">' + esc(dnn(L)) + '</span>' +
           '<span class="dist">' + L.miles.toFixed(2) + ' mi</span></span>' + status + '</span>' +
           '<span class="rtimes' + (end ? '' : isCur ? ' cur' : ' est') + '">' +
-            (end || isCur ? '' : '<span class="estlbl">est</span>') +
+            (end ? '' : '<span class="estlbl">est</span>') +
             '<span class="range">' + dayTag(rStart) + fmtT(rStart) + ' → ' +
             '<b>' + dayTag(rFinish) + fmtT(rFinish) + '</b></span>' +
-            '<span class="dur">' + fmtDur(rFinish - rStart) + '</span>' +
+            '<span class="dur">' + fmtDur(isCur ? now - rStart : rFinish - rStart) + '</span>' +
           '</span>' +
         '</span></button>' +
         (end ? '<button class="killbtn"' + (kills == null ? ' data-empty="1"' : '') + ' data-leg="' + L.leg +
@@ -1307,15 +1360,16 @@ function render(){
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
 function setHistory(open){
   $('history').classList.toggle('show', open);
+  $('scrim').hidden = !open;
   $('syncPill').setAttribute('aria-expanded', String(open));
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
 $('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (t && t.closest && $('history').classList.contains('show') &&
-      !t.closest('#history') && !t.closest('#syncPill')) setHistory(false);
+$('scrim').addEventListener('click', (ev) => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  setHistory(false);
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
 
