@@ -92,15 +92,15 @@
   .wordmark{font-size:var(--t-xs);letter-spacing:.16em;font-weight:800;color:var(--faint);flex:none}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
     font-weight:700;line-height:1;letter-spacing:-.01em;flex:none}
-  /* Whole-race, not this runner: one relay chain, so the offset at the last
-     handoff is the offset everyone downstream inherits. */
-  #teamDelta{font-size:var(--t-sm);font-weight:700;color:var(--dim);white-space:nowrap;
-    min-width:0;overflow:hidden;text-overflow:ellipsis;
-    border:1px solid var(--line);border-radius:var(--r-pill);padding:3px 8px;background:var(--panel)}
-  #teamDelta:empty{display:none}
-  #teamDelta.ahead{color:var(--good);border-color:color-mix(in srgb, var(--good) 40%, var(--line));
+  /* Where the whole relay is projected to reach Seaside. One tap swaps it for
+     the vs-planned delta — the number you want occasionally, not constantly. */
+  #finishChip{font-size:var(--t-sm);font-weight:700;color:var(--dim);white-space:nowrap;
+    min-width:0;overflow:hidden;text-overflow:ellipsis;flex:none;
+    border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 10px;background:var(--panel)}
+  #finishChip:empty{display:none}
+  #finishChip.ahead{color:var(--good);border-color:color-mix(in srgb, var(--good) 40%, var(--line));
     background:color-mix(in srgb, var(--good) 8%, transparent)}
-  #teamDelta.behind{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 40%, var(--line));
+  #finishChip.behind{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 40%, var(--line));
     background:color-mix(in srgb, var(--accent) 8%, transparent)}
 
   /* collapsed sync indicator: a dot. It only grows a word when something is wrong. */
@@ -124,16 +124,32 @@
   #gearBtn{width:38px;height:38px;border-radius:var(--r-pill);border:1px solid var(--line);
     background:var(--panel);font-size:var(--t-lg);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
   #gearBtn[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
-  #gearMenu{position:absolute;top:100%;right:var(--s4);z-index:19;display:none;
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);
-    box-shadow:var(--shadow);min-width:180px;overflow:hidden}
-  #gearMenu:not([hidden]){display:block}
-  .gear-inner button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-    padding:var(--s3) var(--s4);min-height:var(--tap);font-size:var(--t-md);font-weight:600;
-    border-bottom:1px solid var(--line-soft);color:var(--ink)}
-  .gear-inner button:last-child{border-bottom:0}
-  .gear-inner button:active{background:var(--panel-2)}
-  .gear-val{font-family:var(--mono);font-size:var(--t-sm);color:var(--dim);font-weight:700}
+  .sp-sec{margin:var(--s4) 0 var(--s1);padding-top:var(--s3);border-top:1px solid var(--line)}
+  .setrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    min-height:var(--tap);font-size:var(--t-base);font-weight:600;color:var(--ink)}
+  .setrow + .setrow{border-top:1px solid var(--line-soft)}
+  .setrow:active{background:var(--panel-2)}
+  .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
+
+  /* Advanced: findable if you go looking, invisible if you don't. */
+  .advtoggle{display:block;margin:var(--s5) auto var(--s1);padding:var(--s2) var(--s4);
+    font-size:var(--t-xs);color:var(--faint);letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.5}
+  .advtoggle:active{opacity:1}
+  .advnote{font-size:var(--t-sm);color:var(--dim);line-height:1.5;margin:var(--s2) 0 var(--s3)}
+  .advrow{display:flex;gap:var(--s2)}
+  #advPass,#planStart{flex:1;min-width:0;font-family:var(--mono);font-size:var(--t-base);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);
+    color:var(--ink);padding:0 var(--s3);min-height:44px}
+  #planStart{width:100%;margin-bottom:var(--s3)}
+  #advGo{flex:none;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);
+    padding:0 var(--s4);min-height:44px;font-weight:700;color:var(--accent)}
+  .advlbl{display:block;font-size:var(--t-xs);letter-spacing:.1em;text-transform:uppercase;
+    font-weight:700;color:var(--faint);margin-bottom:var(--s2)}
+  .advprimary{width:100%;background:var(--bad);color:#fff;font-weight:800;
+    border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
+  .advprimary:disabled{opacity:.5}
+  .advmsg{font-size:var(--t-sm);margin-top:var(--s2);color:var(--dim);line-height:1.5}
+  .advmsg.bad{color:var(--bad)} .advmsg.good{color:var(--good)}
 
   /* who is running right now — slides in once the bib card scrolls away */
   #nowStrip{max-width:520px;margin:0 auto;overflow:hidden;max-height:0;transition:max-height .22s ease}
@@ -147,7 +163,7 @@
   /* ================= sync + history panel ================= */
   #history{position:absolute;top:100%;left:0;right:0;z-index:19;display:none;
     background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);
-    max-height:min(62vh,460px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    max-height:min(80vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #history.show{display:block}
   .sp-inner{max-width:520px;margin:0 auto;padding:var(--s3) var(--s4) var(--s4)}
   .sp-top{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s1)}
@@ -391,21 +407,13 @@
     <div class="ident">
       <span class="wordmark">H2C</span>
       <span id="raceClock" class="mono" aria-label="race clock">--:--:--</span>
-      <span id="teamDelta" class="mono" aria-label="whole race vs planned"></span>
+      <button id="finishChip" class="mono" aria-label="Projected finish — tap for vs planned"></button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
       <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Sync status and change history">
         <span class="dot"></span><span id="syncBadge"></span>
       </button>
       <button id="gearBtn" aria-label="Settings" aria-expanded="false">⚙</button>
-    </div>
-  </div>
-
-  <div id="gearMenu" hidden>
-    <div class="gear-inner">
-      <button id="themeItem"><span>Theme</span><span id="themeVal" class="gear-val">auto</span></button>
-      <button id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="gear-val">off</span></button>
-      <button id="histItem">History</button>
     </div>
   </div>
 
@@ -426,8 +434,37 @@
       </div>
       <div class="sp-meta">Sheet last read <span class="mono" id="lastSync">never</span></div>
       <div id="histErr"></div>
-      <div class="histhead"><span class="eyebrow">Change history</span></div>
+
+      <div class="sp-sec"><span class="eyebrow">Settings</span></div>
+      <button class="setrow" id="themeItem"><span>Theme</span><span id="themeVal" class="setval">auto</span></button>
+      <button class="setrow" id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="setval">off</span></button>
+
+      <div class="sp-sec"><span class="eyebrow">Change history</span></div>
       <div id="histList"></div>
+
+      <button id="advToggle" class="advtoggle">Advanced</button>
+      <div id="advGate" hidden>
+        <p class="advnote">Changes the team's schedule for everyone. Passphrase required.</p>
+        <div class="advrow">
+          <input type="password" id="advPass" placeholder="passphrase" autocomplete="off"
+                 autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="passphrase">
+          <button id="advGo">Unlock</button>
+        </div>
+        <div id="advMsg" class="advmsg"></div>
+      </div>
+      <div id="advPanel" hidden>
+        <div class="sp-sec"><span class="eyebrow">Sensitive · planned schedule</span></div>
+        <p class="advnote">Moves all 36 planned start and finish times by one offset, so every
+          leg keeps its planned duration. Recorded times, runners, and miles are untouched.
+          Refused once any leg is recorded.</p>
+        <div class="dlginfo">
+          <div class="r"><span class="k">Planned start now</span><span class="v" id="planNow">—</span></div>
+        </div>
+        <label class="advlbl" for="planStart">New planned start (Pacific)</label>
+        <input type="datetime-local" id="planStart">
+        <button id="planGo" class="advprimary">Shift planned schedule</button>
+        <div id="planMsg" class="advmsg"></div>
+      </div>
     </div>
   </div>
 </header>
@@ -1053,6 +1090,9 @@ window.addEventListener('offline', render);
 $('retryBtn').addEventListener('click', () => { failStreak = 0; sync(); });
 
 /* ================= Rendering ================= */
+// The bar shows where the relay lands, not how far off plan it is; the delta
+// is one tap away rather than a number you stare at all race.
+let showDelta = false;
 function render(){
   const now = new Date();
   const started = !!effStart();
@@ -1064,13 +1104,14 @@ function render(){
   // remaining leg inherits, so this is a race number, not a runner number.
   const teamOff = cur ? proj[cur.leg] - cur.predEnd
                       : (actualEnd(36) ? actualEnd(36) - LEGS[35].predEnd : null);
-  if (started && teamOff != null){
+  const seaside = actualEnd(36) || proj[36];
+  if (showDelta && teamOff != null){
     const td = fmtDelta(teamOff);
-    $('teamDelta').textContent = td.txt;
-    $('teamDelta').className = 'mono ' + td.cls;
+    $('finishChip').textContent = td.txt;
+    $('finishChip').className = 'mono ' + td.cls;
   } else {
-    $('teamDelta').textContent = '';
-    $('teamDelta').className = 'mono';
+    $('finishChip').textContent = '\u{1F3C1} ' + dayTag(seaside) + fmtT(seaside);
+    $('finishChip').className = 'mono';
   }
 
   if (started) $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
@@ -1282,25 +1323,69 @@ function setHistory(open){
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-
-function setGear(open){
-  $('gearMenu').hidden = !open;
-  $('gearBtn').setAttribute('aria-expanded', String(open));
-}
-$('gearBtn').addEventListener('click', () => setGear($('gearMenu').hidden));
-$('histItem').addEventListener('click', () => {
-  setGear(false);
+$('gearBtn').addEventListener('click', () => {
   toggleHistory();
-  if ($('history').classList.contains('show')) window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('gearBtn').setAttribute('aria-expanded', String($('history').classList.contains('show')));
 });
+$('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
 document.addEventListener('click', (ev) => {
   const t = ev.target;
-  if (t && t.closest){
-    if (!$('gearMenu').hidden && !t.closest('#gearMenu') && !t.closest('#gearBtn')) setGear(false);
-    if ($('history').classList.contains('show') && !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#histItem')) setHistory(false);
-  }
+  if (t && t.closest && $('history').classList.contains('show') &&
+      !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#gearBtn')) setHistory(false);
 });
-document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape'){ setHistory(false); setGear(false); } });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
+
+/* ========== sensitive settings: shift the sheet's planned schedule ==========
+   The passphrase is in this file, so it is obfuscation, not security — anyone
+   who can read the page can read it. Its job is to stop a mis-tap from
+   rewriting the team's schedule, and the backend demands it a second time. */
+const PLAN_KEY = 'sassyloveslarry';
+const dtLocal = (d) => {
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.TZ, year:'numeric', month:'2-digit',
+    day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(d)
+    .reduce((a, x) => (a[x.type] = x.value, a), {});
+  return p.year + '-' + p.month + '-' + p.day + 'T' + (p.hour === '24' ? '00' : p.hour) + ':' + p.minute;
+};
+function advMsg(id, txt, cls){ $(id).textContent = txt; $(id).className = 'advmsg' + (cls ? ' ' + cls : ''); }
+$('advToggle').addEventListener('click', () => {
+  const open = $('advGate').hidden && $('advPanel').hidden;
+  $('advGate').hidden = !open;
+  if (!open){ $('advPanel').hidden = true; advMsg('advMsg', ''); }
+});
+$('advGo').addEventListener('click', () => {
+  if ($('advPass').value !== PLAN_KEY) return advMsg('advMsg', 'Wrong passphrase.', 'bad');
+  $('advPass').value = '';
+  $('advGate').hidden = true;
+  $('advPanel').hidden = false;
+  advMsg('advMsg', '');
+  $('planNow').textContent = df.format(LEGS[0].predStart) + ' ' + fmtT(LEGS[0].predStart);
+  $('planStart').value = dtLocal(LEGS[0].predStart);
+  advMsg('planMsg', '');
+  if ($('advPanel').scrollIntoView) $('advPanel').scrollIntoView({ block: 'nearest' });
+});
+$('planGo').addEventListener('click', async () => {
+  const v = $('planStart').value;
+  if (!v) return advMsg('planMsg', 'Pick a date and time first.', 'bad');
+  const when = new Date(v.length === 16 ? v + ':00-07:00' : v + '-07:00');
+  if (isNaN(when.getTime())) return advMsg('planMsg', 'That date did not parse.', 'bad');
+  if (!navigator.onLine) return advMsg('planMsg', 'Offline — this one needs a connection.', 'bad');
+  $('planGo').disabled = true;
+  advMsg('planMsg', 'Shifting the schedule…');
+  try {
+    const resp = await callSheet({ planStart: when.toISOString(), planKey: PLAN_KEY });
+    if (resp && resp.ok){
+      applySheet(resp.state);
+      advMsg('planMsg', 'Planned schedule now starts ' + df.format(LEGS[0].predStart) + ' ' +
+        fmtTS(LEGS[0].predStart) + '.', 'good');
+      $('planNow').textContent = df.format(LEGS[0].predStart) + ' ' + fmtT(LEGS[0].predStart);
+      persist(); render();
+    } else {
+      advMsg('planMsg', (resp && resp.error) || 'The sheet refused the change.', 'bad');
+    }
+  } catch (err) {
+    advMsg('planMsg', String(err && err.message ? err.message : err), 'bad');
+  } finally { $('planGo').disabled = false; }
+});
 
 /* ================= theme ================= */
 const THEMES = ['auto', 'light', 'dark'];
