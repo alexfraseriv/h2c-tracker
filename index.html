@@ -86,25 +86,25 @@
   header{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 96%, transparent);
     -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-  .topbar{max-width:520px;margin:0 auto;height:52px;padding:0 var(--s4);
+  .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:baseline;gap:var(--s2);min-width:0}
-  .wordmark{font-size:var(--t-xs);letter-spacing:.16em;font-weight:800;color:var(--faint);flex:none}
+  .ident{display:flex;align-items:center;gap:var(--s5);min-width:0}
+  /* Every clock on screen says what it is. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+  .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
+    font-weight:700;color:var(--faint);line-height:1}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
-    font-weight:700;line-height:1;letter-spacing:-.01em;flex:none}
-  /* Where the whole relay is projected to reach Seaside. One tap swaps it for
-     the vs-planned delta — the number you want occasionally, not constantly. */
-  #finishChip{font-size:var(--t-sm);font-weight:700;color:var(--dim);white-space:nowrap;
-    min-width:0;overflow:hidden;text-overflow:ellipsis;flex:none;
-    border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 10px;background:var(--panel)}
-  #finishChip:empty{display:none}
-  #finishChip.ahead{color:var(--good);border-color:color-mix(in srgb, var(--good) 40%, var(--line));
-    background:color-mix(in srgb, var(--good) 8%, transparent)}
-  #finishChip.behind{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 40%, var(--line));
-    background:color-mix(in srgb, var(--accent) 8%, transparent)}
+    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
+  /* Where the whole relay reaches Seaside. One tap swaps it for the vs-planned
+     delta, and the label above changes with it so the number is never bare. */
+  #finishChip{flex:none}
+  #finishVal{font-size:var(--t-base);font-weight:700;color:var(--ink);line-height:1.1;
+    white-space:nowrap;border-bottom:1px dotted var(--faint);padding-bottom:1px}
+  #finishChip.ahead #finishVal{color:var(--good)}
+  #finishChip.behind #finishVal{color:var(--accent)}
 
   /* collapsed sync indicator: a dot. It only grows a word when something is wrong. */
-  #syncPill{position:relative;display:flex;align-items:center;gap:var(--s2);height:38px;min-width:38px;padding:0 10px;
+  #syncPill{position:relative;display:flex;align-items:center;gap:7px;height:40px;padding:0 12px;
     border-radius:var(--r-pill);border:1px solid var(--line);background:var(--panel);
     font-size:var(--t-sm);font-weight:600;color:var(--dim);white-space:nowrap;flex:none;
     transition:border-color .15s ease,color .15s ease}
@@ -112,7 +112,7 @@
   #syncPill .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none;
     box-shadow:0 0 0 0 currentColor}
   #syncPill.live .dot{background:var(--good)}
-  #syncPill.live{padding:0 13px}
+  .gearico{font-size:15px;line-height:1;opacity:.85}
   #syncPill.pending .dot{background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
   #syncPill.offline .dot{background:var(--bad)}
   #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line));color:var(--bad)}
@@ -121,9 +121,6 @@
   #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
 
-  #gearBtn{width:38px;height:38px;border-radius:var(--r-pill);border:1px solid var(--line);
-    background:var(--panel);font-size:var(--t-lg);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
-  #gearBtn[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
   .sp-sec{margin:var(--s4) 0 var(--s1);padding-top:var(--s3);border-top:1px solid var(--line)}
   .setrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
     min-height:var(--tap);font-size:var(--t-base);font-weight:600;color:var(--ink)}
@@ -147,6 +144,14 @@
     max-height:min(80vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #history.show{display:block}
   .sp-inner{max-width:520px;margin:0 auto;padding:var(--s3) var(--s4) var(--s4)}
+  .sheetlink{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    min-height:var(--tap);margin-bottom:var(--s3);padding:0 var(--s3);
+    border:1px solid color-mix(in srgb, var(--accent) 45%, var(--line));border-radius:var(--r-md);
+    background:color-mix(in srgb, var(--accent) 8%, transparent);
+    color:var(--accent);font-size:var(--t-base);font-weight:700;text-decoration:none}
+  .sheetlink[hidden]{display:none}
+  .sheetlink:active{background:color-mix(in srgb, var(--accent) 16%, transparent)}
+  .sheetarrow{font-size:var(--t-md);opacity:.8}
   .sp-top{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s1)}
   .sp-top .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
   .sp-top .dot.live{background:var(--good)}
@@ -386,15 +391,19 @@
 <header id="topbar">
   <div class="topbar">
     <div class="ident">
-      <span class="wordmark">H2C</span>
-      <span id="raceClock" class="mono" aria-label="race clock">--:--:--</span>
-      <button id="finishChip" class="mono" aria-label="Projected finish — tap for vs planned"></button>
+      <div class="tstat">
+        <span class="tlabel">Elapsed</span>
+        <span id="raceClock" class="mono">--:--:--</span>
+      </div>
+      <button id="finishChip" class="tstat" aria-label="Projected finish — tap for vs planned">
+        <span class="tlabel" id="finishLbl">Finish</span>
+        <span class="mono" id="finishVal">--:--</span>
+      </button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
-      <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Sync status and change history">
-        <span class="dot"></span><span id="syncBadge"></span>
+      <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
+        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span><span id="syncBadge"></span>
       </button>
-      <button id="gearBtn" aria-label="Settings" aria-expanded="false">⚙</button>
     </div>
   </div>
 
@@ -408,6 +417,9 @@
 
   <div id="history" aria-label="Sync status and change history">
     <div class="sp-inner">
+      <a id="sheetLink" class="sheetlink" target="_blank" rel="noopener" hidden>
+        <span>Open the team sheet</span><span class="sheetarrow">↗</span>
+      </a>
       <div class="sp-top">
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Starting…</span>
@@ -436,8 +448,8 @@
     <div id="nowRunner">—</div>
     <div class="bib-grid">
       <div class="stat"><div class="eyebrow" id="nowElapsedLbl">On leg</div><b id="nowElapsed">—</b></div>
-      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Leg plan</div><b id="nowPlan">—</b></div>
       <div class="stat"><div class="eyebrow" id="nowProjLbl">ETA</div><b id="nowProj">—</b></div>
+      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Planned fin</div><b id="nowPlan">—</b></div>
     </div>
     <div id="nowSub">—</div>
   </section>
@@ -531,6 +543,9 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxEin76NH4Z-ufIhlphEwBMSvuTgtPYkDM9c8SizctOk4d7zk5pbYr7sXoST0_WBzYRDg/exec',
   TEAM_KEY: 'seaside-or-bust-2026',     // must match Code.gs
   TZ: 'America/Los_Angeles',
+  // Paste the team sheet's URL here to surface it at the top of the panel.
+  // Left blank the link simply doesn't render.
+  SHEET_URL: '',
   POLL_SEC: 60,
 };
 
@@ -1065,11 +1080,13 @@ function render(){
   const seaside = actualEnd(36) || proj[36];
   if (showDelta && teamOff != null){
     const td = fmtDelta(teamOff);
-    $('finishChip').textContent = td.txt;
-    $('finishChip').className = 'mono ' + td.cls;
+    $('finishLbl').textContent = 'Vs planned';
+    $('finishVal').textContent = td.txt;
+    $('finishChip').className = 'tstat ' + td.cls;
   } else {
-    $('finishChip').textContent = '\u{1F3C1} ' + dayTag(seaside) + fmtT(seaside);
-    $('finishChip').className = 'mono';
+    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : 'Finish';
+    $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
+    $('finishChip').className = 'tstat';
   }
 
   if (started) $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
@@ -1081,11 +1098,11 @@ function render(){
     $('nowRunner').textContent = 'Seaside 🎉';
     const fin = actualEnd(36), st = effStart();
     $('nowElapsedLbl').textContent = 'Total time';
-    $('nowPlanLbl').textContent = 'Planned';
     $('nowProjLbl').textContent = 'Crossed';
+    $('nowPlanLbl').textContent = 'Planned';
     $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
-    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
     $('nowProj').innerHTML = fin ? statT(fin) : '—';
+    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
     $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust start</button>';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
@@ -1094,21 +1111,21 @@ function render(){
     $('nowRunner').textContent = dnn(cur);
     if (started && s){
       $('nowElapsedLbl').textContent = 'On leg';
-      $('nowPlanLbl').textContent = 'Leg plan';
       $('nowProjLbl').textContent = 'ETA';
+      $('nowPlanLbl').textContent = 'Planned fin';
       $('nowElapsed').textContent = fmtDur(now - s);
-      $('nowPlan').textContent = fmtDur(cur.predDur);
       $('nowProj').innerHTML = statT(proj[cur.leg]);
-      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) + ' · planned finish ' +
-        dayTag(cur.predEnd) + fmtT(cur.predEnd) +
+      $('nowPlan').innerHTML = statT(cur.predEnd);
+      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) +
+        ' · leg plan ' + fmtDur(cur.predDur) +
         '</span><button id="adjStart">Adjust start</button>';
     } else {
       $('nowElapsedLbl').textContent = 'Gun time';
-      $('nowPlanLbl').textContent = 'Leg plan';
-      $('nowProjLbl').textContent = 'Planned finish';
+      $('nowProjLbl').textContent = 'Leg plan';
+      $('nowPlanLbl').textContent = 'Planned fin';
       $('nowElapsed').textContent = fmtT(RACE_PLANNED);
-      $('nowPlan').textContent = fmtDur(cur.predDur);
-      $('nowProj').innerHTML = statT(cur.predEnd);
+      $('nowProj').textContent = fmtDur(cur.predDur);
+      $('nowPlan').innerHTML = statT(cur.predEnd);
       $('nowSub').textContent = 'Planned gun time: ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' wave at Timberline.';
     }
   }
@@ -1281,17 +1298,18 @@ function setHistory(open){
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-$('gearBtn').addEventListener('click', () => {
-  toggleHistory();
-  $('gearBtn').setAttribute('aria-expanded', String($('history').classList.contains('show')));
-});
 $('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
 document.addEventListener('click', (ev) => {
   const t = ev.target;
   if (t && t.closest && $('history').classList.contains('show') &&
-      !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#gearBtn')) setHistory(false);
+      !t.closest('#history') && !t.closest('#syncPill')) setHistory(false);
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
+
+if (CONFIG.SHEET_URL){
+  $('sheetLink').setAttribute('href', CONFIG.SHEET_URL);
+  $('sheetLink').hidden = false;
+}
 
 /* ================= theme ================= */
 const THEMES = ['auto', 'light', 'dark'];
