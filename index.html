@@ -825,19 +825,30 @@ function openDlg(mode){
 }
 const KILL_MAX = 99;
 const killWheel = $('killWheel');
-function killIcon(n){
-  if (n === 0) return '\u{1F3C3}';         // runner — nobody caught yet
-  if (n <= 2) return '\u{1F3C3}\u{1F4A8}'; // runner + wind — warming up
-  if (n <= 5) return '\u{1F525}';           // fire — on a streak
-  if (n <= 10) return '\u{1F525}\u{1F525}'; // double fire
-  if (n <= 20) return '\u{2694}️';     // crossed swords — slaying
-  if (n <= 35) return '\u{1F451}';          // crown — royalty
-  return '\u{1F480}';                       // skull — total carnage
+function killFlair(n){
+  if (n === 0)  return ['\u{1F3C3}',              'roadkills'];
+  if (n === 1)  return ['\u{1F3C3}\u{1F4A8}',     'first blood'];
+  if (n === 2)  return ['\u{1F3C3}\u{1F4A8}',     'double kill'];
+  if (n === 3)  return ['\u{1F525}',               'triple kill'];
+  if (n === 4)  return ['\u{1F525}',               'overkill'];
+  if (n === 5)  return ['\u{1F525}',               'killtacular'];
+  if (n === 6)  return ['\u{1F525}\u{1F525}',      'killtrocity'];
+  if (n === 7)  return ['\u{1F525}\u{1F525}',      'killimanjaro'];
+  if (n === 8)  return ['\u{2694}️',          'killtastrophe'];
+  if (n === 9)  return ['\u{2694}️',          'killpocalypse'];
+  if (n === 10) return ['\u{2694}️',          'killionaire'];
+  if (n <= 15)  return ['\u{1F451}',               'running riot'];
+  if (n <= 20)  return ['\u{1F451}',               'rampage'];
+  if (n <= 30)  return ['\u{1F480}',               'untouchable'];
+  if (n <= 40)  return ['\u{1F480}\u{1F451}',      'invincible'];
+  if (n <= 50)  return ['\u{1F480}\u{1F451}',      'inconceivable'];
+  return              ['\u{1F480}\u{1F525}\u{1F451}', 'unfrigginbelievable'];
 }
 function renderKills(){
   killWheel.dataset.val = String(dlgKillsVal);
-  killWheel.innerHTML = '<span class="kico">' + killIcon(dlgKillsVal) + '</span>' +
-    dlgKillsVal + '<span class="unit">roadkill' + (dlgKillsVal === 1 ? '' : 's') + '</span>';
+  const [ico, phrase] = killFlair(dlgKillsVal);
+  killWheel.innerHTML = '<span class="kico">' + ico + '</span>' +
+    dlgKillsVal + '<span class="unit">' + phrase + '</span>';
   $('killMinus').disabled = dlgKillsVal <= 0;
   $('killPlus').disabled = dlgKillsVal >= KILL_MAX;
 }
