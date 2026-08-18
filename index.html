@@ -381,7 +381,8 @@
     font-family:var(--mono);font-size:var(--t-md);font-weight:700;color:var(--dim)}
   .killquick .kreset{color:var(--faint);font-family:var(--sans);font-size:var(--t-sm);letter-spacing:.04em}
   #killSave{width:100%;background:var(--accent-fill);color:var(--accent-ink);
-    font-weight:800;border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
+    font-weight:800;border-radius:var(--r-md);min-height:50px;font-size:var(--t-base)}
+  #dlgKills + .dlg-actions{margin-top:var(--s3)}
 
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -867,24 +868,36 @@ function openDlg(mode){
 }
 const KILL_MAX = 99;
 const killWheel = $('killWheel');
+/* Halo medals, canonical.
+ *
+ * Halo runs two separate ladders. MULTIKILLS (Double Kill … Killionaire) are
+ * kills within ~4 seconds of each other. KILLING SPREES (Killing Spree 5,
+ * Killing Frenzy 10, Running Riot 15, Rampage 20, Untouchable 25, Invincible
+ * 30, Inconceivable 35, Unfrigginbelievable 40) are kills without dying, with
+ * no clock on them. Roadkills accumulate over a five-mile leg, so the spree
+ * ladder is the one that actually matches, and its thresholds are used exactly.
+ * The multikill names fill 2–4, where the spree ladder is silent.
+ * n=1 is First Strike — Halo's first-kill-of-the-match medal. It is not
+ * "First Blood"; that belongs to other franchises.
+ */
+const KILL_MEDALS = [
+  [40, '\u{1F480}\u{1F525}\u{1F451}', 'unfrigginbelievable'],
+  [35, '\u{1F480}\u{1F451}',           'inconceivable'],
+  [30, '\u{1F480}\u{1F451}',           'invincible'],
+  [25, '\u{1F480}',                     'untouchable'],
+  [20, '\u{1F451}',                     'rampage'],
+  [15, '\u{1F451}',                     'running riot'],
+  [10, '\u{1F525}\u{1F525}',           'killing frenzy'],
+  [5,  '\u{1F525}',                     'killing spree'],
+  [4,  '\u{1F525}',                     'overkill'],
+  [3,  '\u{1F3C3}\u{1F4A8}',           'triple kill'],
+  [2,  '\u{1F3C3}\u{1F4A8}',           'double kill'],
+  [1,  '\u{1F3C3}\u{1F4A8}',           'first strike'],
+  [0,  '\u{1F3C3}',                     'roadkills'],
+];
 function killFlair(n){
-  if (n === 0)  return ['\u{1F3C3}',              'roadkills'];
-  if (n === 1)  return ['\u{1F3C3}\u{1F4A8}',     'first blood'];
-  if (n === 2)  return ['\u{1F3C3}\u{1F4A8}',     'double kill'];
-  if (n === 3)  return ['\u{1F525}',               'triple kill'];
-  if (n === 4)  return ['\u{1F525}',               'overkill'];
-  if (n === 5)  return ['\u{1F525}',               'killtacular'];
-  if (n === 6)  return ['\u{1F525}\u{1F525}',      'killtrocity'];
-  if (n === 7)  return ['\u{1F525}\u{1F525}',      'killimanjaro'];
-  if (n === 8)  return ['\u{2694}️',          'killtastrophe'];
-  if (n === 9)  return ['\u{2694}️',          'killpocalypse'];
-  if (n === 10) return ['\u{2694}️',          'killionaire'];
-  if (n <= 15)  return ['\u{1F451}',               'running riot'];
-  if (n <= 20)  return ['\u{1F451}',               'rampage'];
-  if (n <= 30)  return ['\u{1F480}',               'untouchable'];
-  if (n <= 40)  return ['\u{1F480}\u{1F451}',      'invincible'];
-  if (n <= 50)  return ['\u{1F480}\u{1F451}',      'inconceivable'];
-  return              ['\u{1F480}\u{1F525}\u{1F451}', 'unfrigginbelievable'];
+  for (const [min, ico, phrase] of KILL_MEDALS) if (n >= min) return [ico, phrase];
+  return ['\u{1F3C3}', 'roadkills'];
 }
 function renderKills(){
   killWheel.dataset.val = String(dlgKillsVal);
