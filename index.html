@@ -131,25 +131,6 @@
   .setrow:active{background:var(--panel-2)}
   .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
 
-  /* Advanced: findable if you go looking, invisible if you don't. */
-  .advtoggle{display:block;margin:var(--s5) auto var(--s1);padding:var(--s2) var(--s4);
-    font-size:var(--t-xs);color:var(--faint);letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.5}
-  .advtoggle:active{opacity:1}
-  .advnote{font-size:var(--t-sm);color:var(--dim);line-height:1.5;margin:var(--s2) 0 var(--s3)}
-  .advrow{display:flex;gap:var(--s2)}
-  #advPass,#planStart{flex:1;min-width:0;font-family:var(--mono);font-size:var(--t-base);
-    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);
-    color:var(--ink);padding:0 var(--s3);min-height:44px}
-  #planStart{width:100%;margin-bottom:var(--s3)}
-  #advGo{flex:none;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);
-    padding:0 var(--s4);min-height:44px;font-weight:700;color:var(--accent)}
-  .advlbl{display:block;font-size:var(--t-xs);letter-spacing:.1em;text-transform:uppercase;
-    font-weight:700;color:var(--faint);margin-bottom:var(--s2)}
-  .advprimary{width:100%;background:var(--bad);color:#fff;font-weight:800;
-    border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
-  .advprimary:disabled{opacity:.5}
-  .advmsg{font-size:var(--t-sm);margin-top:var(--s2);color:var(--dim);line-height:1.5}
-  .advmsg.bad{color:var(--bad)} .advmsg.good{color:var(--good)}
 
   /* who is running right now — slides in once the bib card scrolls away */
   #nowStrip{max-width:520px;margin:0 auto;overflow:hidden;max-height:0;transition:max-height .22s ease}
@@ -442,29 +423,6 @@
       <div class="sp-sec"><span class="eyebrow">Change history</span></div>
       <div id="histList"></div>
 
-      <button id="advToggle" class="advtoggle">Advanced</button>
-      <div id="advGate" hidden>
-        <p class="advnote">Changes the team's schedule for everyone. Passphrase required.</p>
-        <div class="advrow">
-          <input type="password" id="advPass" placeholder="passphrase" autocomplete="off"
-                 autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="passphrase">
-          <button id="advGo">Unlock</button>
-        </div>
-        <div id="advMsg" class="advmsg"></div>
-      </div>
-      <div id="advPanel" hidden>
-        <div class="sp-sec"><span class="eyebrow">Sensitive · planned schedule</span></div>
-        <p class="advnote">Moves all 36 planned start and finish times by one offset, so every
-          leg keeps its planned duration. Recorded times, runners, and miles are untouched.
-          Refused once any leg is recorded.</p>
-        <div class="dlginfo">
-          <div class="r"><span class="k">Planned start now</span><span class="v" id="planNow">—</span></div>
-        </div>
-        <label class="advlbl" for="planStart">New planned start (Pacific)</label>
-        <input type="datetime-local" id="planStart">
-        <button id="planGo" class="advprimary">Shift planned schedule</button>
-        <div id="planMsg" class="advmsg"></div>
-      </div>
     </div>
   </div>
 </header>
@@ -1334,58 +1292,6 @@ document.addEventListener('click', (ev) => {
       !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#gearBtn')) setHistory(false);
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
-
-/* ========== sensitive settings: shift the sheet's planned schedule ==========
-   The passphrase is in this file, so it is obfuscation, not security — anyone
-   who can read the page can read it. Its job is to stop a mis-tap from
-   rewriting the team's schedule, and the backend demands it a second time. */
-const PLAN_KEY = 'sassyloveslarry';
-const dtLocal = (d) => {
-  const p = new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.TZ, year:'numeric', month:'2-digit',
-    day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(d)
-    .reduce((a, x) => (a[x.type] = x.value, a), {});
-  return p.year + '-' + p.month + '-' + p.day + 'T' + (p.hour === '24' ? '00' : p.hour) + ':' + p.minute;
-};
-function advMsg(id, txt, cls){ $(id).textContent = txt; $(id).className = 'advmsg' + (cls ? ' ' + cls : ''); }
-$('advToggle').addEventListener('click', () => {
-  const open = $('advGate').hidden && $('advPanel').hidden;
-  $('advGate').hidden = !open;
-  if (!open){ $('advPanel').hidden = true; advMsg('advMsg', ''); }
-});
-$('advGo').addEventListener('click', () => {
-  if ($('advPass').value !== PLAN_KEY) return advMsg('advMsg', 'Wrong passphrase.', 'bad');
-  $('advPass').value = '';
-  $('advGate').hidden = true;
-  $('advPanel').hidden = false;
-  advMsg('advMsg', '');
-  $('planNow').textContent = df.format(LEGS[0].predStart) + ' ' + fmtT(LEGS[0].predStart);
-  $('planStart').value = dtLocal(LEGS[0].predStart);
-  advMsg('planMsg', '');
-  if ($('advPanel').scrollIntoView) $('advPanel').scrollIntoView({ block: 'nearest' });
-});
-$('planGo').addEventListener('click', async () => {
-  const v = $('planStart').value;
-  if (!v) return advMsg('planMsg', 'Pick a date and time first.', 'bad');
-  const when = new Date(v.length === 16 ? v + ':00-07:00' : v + '-07:00');
-  if (isNaN(when.getTime())) return advMsg('planMsg', 'That date did not parse.', 'bad');
-  if (!navigator.onLine) return advMsg('planMsg', 'Offline — this one needs a connection.', 'bad');
-  $('planGo').disabled = true;
-  advMsg('planMsg', 'Shifting the schedule…');
-  try {
-    const resp = await callSheet({ planStart: when.toISOString(), planKey: PLAN_KEY });
-    if (resp && resp.ok){
-      applySheet(resp.state);
-      advMsg('planMsg', 'Planned schedule now starts ' + df.format(LEGS[0].predStart) + ' ' +
-        fmtTS(LEGS[0].predStart) + '.', 'good');
-      $('planNow').textContent = df.format(LEGS[0].predStart) + ' ' + fmtT(LEGS[0].predStart);
-      persist(); render();
-    } else {
-      advMsg('planMsg', (resp && resp.error) || 'The sheet refused the change.', 'bad');
-    }
-  } catch (err) {
-    advMsg('planMsg', String(err && err.message ? err.message : err), 'bad');
-  } finally { $('planGo').disabled = false; }
-});
 
 /* ================= theme ================= */
 const THEMES = ['auto', 'light', 'dark'];
