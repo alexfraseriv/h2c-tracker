@@ -40,6 +40,8 @@ Phone (index.html, PWA)            Google Apps Script             Team Sheet
 
 ## Test plan
 
+**Reset for a drill: `node test/reset.mjs`** — two subcommands. `clear <exec-url> <team-key>` lists every recorded leg and the race start, then wipes them with `--yes` (dry run without it). `plan "2026-08-20T17:00"` prints a re-anchored planned schedule as two paste-ready columns — every leg keeps its exact planned duration, the whole plan just moves. The clear goes over the wire; the plan has to be pasted, because the deployed script has no endpoint for writing the predicted block.
+
 **Stage 0a (no deploy needed): `node test/gauntlet.mjs`** — the adversarial suite: boots the full client headless against the sheet replica with a chaos network. Covers dead-zone batching, dropped responses after server apply, captive portals + backoff caps, mid-flight edits, dueling phones (LWW convergence), poisoned queues, private browsing, login-page deploys, 30s hung-request timeouts, hostile sheet edits (XSS names, inserted rows, renamed headers), clock skew, malformed state, and perf (model tick ~57µs, full render ~0.7ms, storage ~5KB).
 
 **Stage 0b (no deploy needed): `node test/local-e2e.mjs`** — runs the real Code.gs against a replica of the live sheet (structure captured 8/17). Verifies layout detection, checkbox gating, writes/clears/kills, cache invalidation, and that the baked schedule in index.html still matches the sheet. All 26 checks green as shipped.
