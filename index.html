@@ -127,6 +127,7 @@
   .setrow + .setrow{border-top:1px solid var(--line-soft)}
   .setrow:active{background:var(--panel-2)}
   .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
+  .setrow[hidden]{display:none}
 
 
   /* who is running right now — slides in once the bib card scrolls away */
@@ -165,6 +166,8 @@
   #retryBtn{color:var(--accent);font-weight:700;font-size:var(--t-md);border:1px solid var(--line);
     border-radius:var(--r-sm);padding:0 var(--s3);height:40px;flex:none;background:var(--panel-2)}
   .sp-meta{font-size:var(--t-sm);color:var(--faint);margin-bottom:var(--s3)}
+  .sp-meta .stale{color:var(--bad)}
+  #retryBtn:disabled{color:var(--faint);opacity:.6}
   #histErr{display:none;margin:var(--s2) 0;padding:10px var(--s3);border-radius:var(--r-md);font-size:var(--t-md);
     color:var(--bad);border:1px solid color-mix(in srgb, var(--bad) 40%, var(--line));
     background:color-mix(in srgb, var(--bad) 8%, transparent)}
@@ -190,6 +193,7 @@
   .bib::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;
     background:linear-gradient(90deg,transparent,var(--accent-fill) 30%,var(--accent-fill) 70%,transparent);opacity:.9}
   .bib-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin-bottom:var(--s3)}
+  #nowState{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
   .legchip{font-family:var(--mono);font-weight:700;font-size:var(--t-md);color:var(--accent);
     border:1px solid color-mix(in srgb, var(--accent) 42%, transparent);
     background:color-mix(in srgb, var(--accent) 10%, transparent);
@@ -266,9 +270,13 @@
   /* ================= van filter ================= */
   .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s1);gap:var(--s1)}
   .seg button{flex:1;min-height:40px;border-radius:var(--r-sm);font-size:var(--t-md);font-weight:700;color:var(--dim)}
-  .seg button[aria-pressed="true"]{background:var(--panel);box-shadow:var(--shadow-sm);color:var(--accent)}
-  .seg button[data-van="1"][aria-pressed="true"]{color:var(--van1)}
-  .seg button[data-van="2"][aria-pressed="true"]{color:var(--van2)}
+  .seg button:active{transform:scale(.97)}
+  .seg button[aria-pressed="true"]{background:var(--panel-3);box-shadow:var(--shadow-sm);
+    color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 55%, transparent)}
+  .seg button[data-van="1"][aria-pressed="true"]{color:var(--van1);
+    border-color:color-mix(in srgb, var(--van1) 55%, transparent)}
+  .seg button[data-van="2"][aria-pressed="true"]{color:var(--van2);
+    border-color:color-mix(in srgb, var(--van2) 55%, transparent)}
 
   /* ================= race timeline ================= */
   .legrow{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-md);
@@ -286,7 +294,7 @@
     box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent)}
   .legrow .mid{min-width:0;display:flex;flex-direction:column;gap:3px}
   .rtop{display:flex;align-items:baseline;gap:6px;min-width:0}
-  .rtop .who{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rtop .who{flex:1;min-width:8ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rtop .who .name{white-space:nowrap}
   .legrow .name{font-weight:600;font-size:14px}
   .rtop .dist{font-family:var(--mono);font-variant-numeric:tabular-nums;
@@ -324,11 +332,14 @@
     padding:10px var(--s3);margin:var(--s2) 0 var(--s3);border:1px dashed var(--line);border-radius:var(--r-md);
     background:color-mix(in srgb, var(--panel) 50%, transparent)}
   .exline .ic{font-size:var(--t-base);text-align:center;line-height:1}
-  .exline .exmid{min-width:0}
+  /* The whole name/sub block is the Maps target — the navigator taps this while driving. */
+  .exline .exmid{min-width:0;display:flex;flex-direction:column;justify-content:center;
+    min-height:var(--tap);color:inherit;text-decoration:none}
+  .exline .mapslink{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .exline .exmid:active{opacity:.6}
   .exline .name{font-weight:700;font-size:var(--t-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .exline .after{font-size:var(--t-xs);color:var(--faint);margin-top:1px;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis}
-  .exline .after a{font-size:var(--t-xs)}
   .exline .when{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-md);text-align:right;color:var(--dim);white-space:nowrap}
   .exline .when.done{color:var(--good)}
   .exline .when.next{color:var(--accent);font-weight:700}
@@ -362,7 +373,14 @@
     border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
   .dlg-actions .ghost{border:1px solid var(--line);border-radius:var(--r-md);padding:0 var(--s4);
     min-height:48px;color:var(--dim);font-weight:600;background:var(--panel-2)}
-  .dlg-actions .danger{color:var(--bad);background:none}
+  /* Out of the action row and behind a second tap — it deletes a handoff
+     someone else recorded, and it used to sit 8px from Close at the same size. */
+  .clearlink{display:block;width:100%;margin-top:var(--s4);padding:var(--s2);
+    font-size:var(--t-md);font-weight:600;color:var(--dim);text-decoration:underline;
+    text-underline-offset:3px;min-height:var(--tap)}
+  .clearlink.armed{color:var(--bad);font-weight:800;text-decoration:none;
+    border:1px solid color-mix(in srgb, var(--bad) 50%, var(--line));border-radius:var(--r-md);
+    background:color-mix(in srgb, var(--bad) 10%, transparent)}
 
   /* roadkill stepper — big targets, no scroll wheel to fight in a moving van */
   #dlgKills{margin-top:var(--s5);border-top:1px solid var(--line);padding-top:var(--s4)}
@@ -519,10 +537,10 @@
       <button data-n="15">+15s</button><button data-n="60">+1m</button>
     </div>
     <div class="dlg-actions">
-      <button class="ghost danger" id="dlgClear">Clear</button>
       <button class="ghost" id="dlgCancel">Close</button>
       <button class="primary" id="dlgSave">Confirm time</button>
     </div>
+    <button class="clearlink" id="dlgClear">Clear this recorded time</button>
   </div>
   <div id="dlgKills" hidden>
     <div class="killhead">
@@ -835,7 +853,7 @@ function openDlg(mode){
     $('dlgLock').hidden = true;
     $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true; $('dlgKills').hidden = true;
     $('dlgTime').value = toHMS(dlgRef);
-    $('dlgClear').style.display = s ? '' : 'none';
+    $('dlgClear').style.display = s ? '' : 'none'; disarmClear();
   } else if (mode.kind === 'kills'){
     const L = LEGS[mode.leg - 1];
     const end = actualEnd(L.leg);
@@ -882,7 +900,7 @@ function openDlg(mode){
       $('dlgLock').hidden = true;
       $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true;
       $('dlgTime').value = toHMS(dlgRef);
-      $('dlgClear').style.display = end ? '' : 'none';
+      $('dlgClear').style.display = end ? '' : 'none'; disarmClear();
       $('dlgSave').textContent = end ? 'Confirm new time' : 'Confirm finish';
       $('dlgKills').hidden = true; // kills live behind the chase button on the row now
       if (isCurrent && !end) $('dlgSub').innerHTML = vanSpan(L.van) + ' · on the road now · the big button is the fast path';
@@ -959,7 +977,22 @@ $('dlgSave').addEventListener('click', () => {
   else enqueueOp('record', dlgMode.leg, hmsToDate($('dlgTime').value, dlgRef));
   dlg.close();
 });
+let clearArmed = false, clearTimer = null;
+function disarmClear(){
+  clearArmed = false;
+  clearTimeout(clearTimer);
+  $('dlgClear').classList.remove('armed');
+  $('dlgClear').textContent = 'Clear this recorded time';
+}
 $('dlgClear').addEventListener('click', () => {
+  if (!clearArmed){
+    clearArmed = true;
+    $('dlgClear').classList.add('armed');
+    $('dlgClear').textContent = 'Tap again to clear';
+    clearTimer = setTimeout(disarmClear, 4000);
+    return;
+  }
+  disarmClear();
   if (dlgMode.kind === 'start') enqueueOp('startClear', null, null);
   else enqueueOp('clear', dlgMode.leg, null);
   dlg.close();
@@ -1157,7 +1190,7 @@ function render(){
     $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
     $('nowProj').innerHTML = fin ? statT(fin) : '—';
     $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
-    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust start</button>';
+    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust gun time</button>';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
     $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
@@ -1172,7 +1205,7 @@ function render(){
       $('nowPlan').innerHTML = statT(cur.predEnd);
       $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) +
         ' · leg plan ' + fmtDur(cur.predDur) +
-        '</span><button id="adjStart">Adjust start</button>';
+        '</span><button id="adjStart">Adjust gun time</button>';
     } else {
       $('nowElapsedLbl').textContent = 'Gun time';
       $('nowProjLbl').textContent = 'Leg plan';
@@ -1280,8 +1313,9 @@ function render(){
     const plan = x.afterLeg === 0 ? RACE_PLANNED : LEGS[x.afterLeg - 1].predEnd;
     return '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
       '<span class="ic">' + ic + '</span>' +
-      '<div class="exmid"><div class="name">' + esc(x.name) + '</div>' +
-      '<div class="after">' + sub + ' · <a href="' + x.url + '" target="_blank" rel="noopener">Maps ↗</a></div></div>' +
+      '<a class="exmid" href="' + x.url + '" target="_blank" rel="noopener">' +
+      '<div class="name">' + esc(x.name) + '</div>' +
+      '<div class="after">' + sub + ' · <span class="mapslink">Maps ↗</span></div></a>' +
       '<div><div class="when ' + (done ? 'done' : isNext ? 'next' : '') + '">' +
       (done ? '✓ ' : 'ETA ') + dayTag(when) + fmtT(when) + '</div>' +
       '<div class="plan">planned ' + dayTag(plan) + fmtT(plan) + '</div></div></div>';
@@ -1303,8 +1337,7 @@ function render(){
         const d = fmtDelta(end - L.predEnd);
         // One number, and it's the whole race's: where the relay stands against
         // the planned finish as of this handoff.
-        status = '<span class="rstat ' + d.cls + '">' + d.txt + '</span>' +
-                 (q ? '<span class="tag q">QUEUED</span>' : '');
+        status = '<span class="rstat ' + d.cls + '">' + d.txt + '</span>';
       } else if (isCur){
         status = '<span class="rstat live">on the road</span>';
       }
@@ -1318,6 +1351,7 @@ function render(){
             (end ? '' : '<span class="estlbl">est</span>') +
             '<span class="range">' + dayTag(rStart) + fmtT(rStart) + ' → ' +
             '<b>' + dayTag(rFinish) + fmtT(rFinish) + '</b></span>' +
+            (q ? '<span class="tag q">QUEUED</span>' : '') +
             '<span class="dur">' + fmtDur(isCur ? now - rStart : rFinish - rStart) + '</span>' +
           '</span>' +
         '</span></button>' +
@@ -1347,14 +1381,23 @@ function render(){
   if (!CONFIG.SCRIPT_URL){ badge = 'local'; text = 'Local only — no sheet URL'; }
   else if (!navigator.onLine){ cls = 'offline'; badge = n ? 'Offline · ' + n : 'Offline';
     text = n ? 'Offline · ' + n + ' queued' : 'Offline'; }
-  else if (lastErr){ cls = 'error'; badge = n ? String(n) : 'Retry'; text = n ? n + ' not logged — tap' : 'Sync error — tap'; }
-  else if (n || syncing){ cls = 'pending'; badge = n ? String(n) : '…'; text = (n || '') + ' syncing…'; }
+  else if (lastErr){ cls = 'error'; badge = n ? n + ' failed' : 'Retry'; text = n ? n + ' not logged — tap' : 'Sync error — tap'; }
+  else if (n || syncing){ cls = 'pending'; badge = n ? n + ' sending' : 'Sending'; text = (n || '') + ' syncing…'; }
   else { cls = 'live'; badge = ''; text = 'Live · synced'; }
   $('syncPill').className = cls;
   $('syncBadge').textContent = badge;
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
-  $('lastSync').textContent = lastSyncAt ? fmtTS(new Date(lastSyncAt)) : 'never';
+  // Age, not a timestamp — on a 30-hour race "6:20:37 PM" says nothing about staleness.
+  if (lastSyncAt){
+    const age = Date.now() - lastSyncAt;
+    $('lastSync').textContent = age < 60000 ? 'just now'
+      : age < 3600000 ? Math.floor(age / 60000) + ' min ago'
+      : Math.floor(age / 3600000) + 'h ' + Math.floor((age % 3600000) / 60000) + 'm ago';
+    $('lastSync').className = 'mono' + (age > 300000 ? ' stale' : '');
+  } else { $('lastSync').textContent = 'never'; $('lastSync').className = 'mono stale'; }
+  $('retryBtn').disabled = !navigator.onLine;
+  $('retryBtn').textContent = navigator.onLine ? 'Sync now' : 'Offline';
 }
 
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
@@ -1418,18 +1461,30 @@ document.querySelector('.seg').addEventListener('click', (ev) => {
 document.querySelectorAll('.seg button').forEach(b =>
   b.setAttribute('aria-pressed', String(Number(b.dataset.van) === vanFilter)));
 
-let wakeLock = null;
-function updateAwakeLabel(){ $('awakeVal').textContent = wakeLock ? 'on' : 'off'; }
-$('awakeItem').addEventListener('click', async () => {
-  try {
-    if (wakeLock){ await wakeLock.release(); wakeLock = null; }
-    else if ('wakeLock' in navigator){
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; updateAwakeLabel(); render(); });
-    }
-    updateAwakeLabel();
-  } catch(e){}
-});
+let wakeLock = null, wakeFailed = false;
+function updateAwakeLabel(){
+  $('awakeVal').textContent = wakeFailed ? 'unavailable' : wakeLock ? 'on' : 'off';
+}
+// No Wake Lock at all: hide the row rather than offer a switch that does nothing.
+if (!('wakeLock' in navigator)){
+  $('awakeItem').hidden = true;
+} else {
+  $('awakeItem').addEventListener('click', async () => {
+    try {
+      wakeFailed = false;
+      if (wakeLock){ await wakeLock.release(); wakeLock = null; }
+      else {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; updateAwakeLabel(); render(); });
+      }
+    } catch (e) {
+      // The request can be refused (low battery, backgrounded tab). Swallowing it
+      // left the row reading "off" while the navigator's phone slept anyway.
+      wakeLock = null;
+      wakeFailed = true;
+    } finally { updateAwakeLabel(); }
+  });
+}
 
 /* ================= Battery-aware loop ================= */
 let tickId = null, tickCount = 0;
