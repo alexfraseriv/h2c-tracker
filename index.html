@@ -44,7 +44,7 @@
       color-scheme:light;
       --bg:#f2f4f8; --panel:#ffffff; --panel-2:#f1f3f7; --panel-3:#e7eaf1;
       --line:#d9dee7; --line-soft:#e8ebf1;
-      --ink:#141821; --dim:#59626f; --faint:#6b7480;
+      --ink:#141821; --dim:#59626f; --faint:#616a74;
       --accent:#8a5a00; --accent-fill:#ffc53d; --accent-ink:#1a1503; --accent-deep:#d19d21;
       --good:#0f8043; --good-fill:#2bbd6d; --good-ink:#04160c; --good-deep:#178a50;
       --bad:#c62828;
@@ -58,7 +58,7 @@
     color-scheme:light;
     --bg:#f2f4f8; --panel:#ffffff; --panel-2:#f1f3f7; --panel-3:#e7eaf1;
     --line:#d9dee7; --line-soft:#e8ebf1;
-    --ink:#141821; --dim:#59626f; --faint:#6b7480;
+    --ink:#141821; --dim:#59626f; --faint:#616a74;
     --accent:#8a5a00; --accent-fill:#ffc53d; --accent-ink:#1a1503; --accent-deep:#d19d21;
     --good:#0f8043; --good-fill:#2bbd6d; --good-ink:#04160c; --good-deep:#178a50;
     --bad:#c62828;
@@ -83,28 +83,28 @@
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
   /* ================= sticky top bar ================= */
-  header{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 96%, transparent);
+  header{position:sticky;top:0;z-index:20;background:var(--bg);
     -webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
-  .topbar{max-width:520px;margin:0 auto;height:52px;padding:0 var(--s4);
+  .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:baseline;gap:var(--s2);min-width:0}
-  .wordmark{font-size:var(--t-xs);letter-spacing:.16em;font-weight:800;color:var(--faint);flex:none}
+  .ident{display:flex;align-items:center;gap:var(--s5);min-width:0}
+  /* Every clock on screen says what it is. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+  .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
+    font-weight:700;color:var(--faint);line-height:1}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
-    font-weight:700;line-height:1;letter-spacing:-.01em;flex:none}
-  /* Where the whole relay is projected to reach Seaside. One tap swaps it for
-     the vs-planned delta — the number you want occasionally, not constantly. */
-  #finishChip{font-size:var(--t-sm);font-weight:700;color:var(--dim);white-space:nowrap;
-    min-width:0;overflow:hidden;text-overflow:ellipsis;flex:none;
-    border:1px solid var(--line);border-radius:var(--r-pill);padding:5px 10px;background:var(--panel)}
-  #finishChip:empty{display:none}
-  #finishChip.ahead{color:var(--good);border-color:color-mix(in srgb, var(--good) 40%, var(--line));
-    background:color-mix(in srgb, var(--good) 8%, transparent)}
-  #finishChip.behind{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 40%, var(--line));
-    background:color-mix(in srgb, var(--accent) 8%, transparent)}
+    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
+  /* Where the whole relay reaches Seaside. One tap swaps it for the vs-planned
+     delta, and the label above changes with it so the number is never bare. */
+  #finishChip{flex:none}
+  #finishVal{font-size:var(--t-base);font-weight:700;color:var(--ink);line-height:1.1;
+    white-space:nowrap;border-bottom:1px dotted var(--faint);padding-bottom:1px}
+  #finishChip.ahead #finishVal{color:var(--good)}
+  #finishChip.behind #finishVal{color:var(--accent)}
 
   /* collapsed sync indicator: a dot. It only grows a word when something is wrong. */
-  #syncPill{position:relative;display:flex;align-items:center;gap:var(--s2);height:38px;min-width:38px;padding:0 10px;
+  #syncPill{position:relative;display:flex;align-items:center;gap:7px;height:40px;padding:0 12px;
     border-radius:var(--r-pill);border:1px solid var(--line);background:var(--panel);
     font-size:var(--t-sm);font-weight:600;color:var(--dim);white-space:nowrap;flex:none;
     transition:border-color .15s ease,color .15s ease}
@@ -112,7 +112,7 @@
   #syncPill .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none;
     box-shadow:0 0 0 0 currentColor}
   #syncPill.live .dot{background:var(--good)}
-  #syncPill.live{padding:0 13px}
+  .gearico{font-size:15px;line-height:1;opacity:.85}
   #syncPill.pending .dot{background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
   #syncPill.offline .dot{background:var(--bad)}
   #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line));color:var(--bad)}
@@ -121,15 +121,13 @@
   #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
 
-  #gearBtn{width:38px;height:38px;border-radius:var(--r-pill);border:1px solid var(--line);
-    background:var(--panel);font-size:var(--t-lg);color:var(--dim);display:flex;align-items:center;justify-content:center;flex:none}
-  #gearBtn[aria-expanded="true"]{background:var(--panel-2);color:var(--ink)}
   .sp-sec{margin:var(--s4) 0 var(--s1);padding-top:var(--s3);border-top:1px solid var(--line)}
   .setrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
     min-height:var(--tap);font-size:var(--t-base);font-weight:600;color:var(--ink)}
   .setrow + .setrow{border-top:1px solid var(--line-soft)}
   .setrow:active{background:var(--panel-2)}
   .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
+  .setrow[hidden]{display:none}
 
 
   /* who is running right now — slides in once the bib card scrolls away */
@@ -142,11 +140,23 @@
   #stripMeta .sep{color:var(--faint);padding:0 2px}
 
   /* ================= sync + history panel ================= */
+  /* Swallows the dismissing tap so it cannot also arm a handoff on the
+     plunger the panel is covering. */
+  #scrim{position:fixed;inset:0;z-index:18;background:transparent}
+  #scrim[hidden]{display:none}
   #history{position:absolute;top:100%;left:0;right:0;z-index:19;display:none;
     background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);
     max-height:min(80vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #history.show{display:block}
   .sp-inner{max-width:520px;margin:0 auto;padding:var(--s3) var(--s4) var(--s4)}
+  .sheetlink{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    min-height:var(--tap);margin-bottom:var(--s3);padding:0 var(--s3);
+    border:1px solid color-mix(in srgb, var(--accent) 45%, var(--line));border-radius:var(--r-md);
+    background:color-mix(in srgb, var(--accent) 8%, transparent);
+    color:var(--accent);font-size:var(--t-base);font-weight:700;text-decoration:none}
+  .sheetlink[hidden]{display:none}
+  .sheetlink:active{background:color-mix(in srgb, var(--accent) 16%, transparent)}
+  .sheetarrow{font-size:var(--t-md);opacity:.8}
   .sp-top{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s1)}
   .sp-top .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
   .sp-top .dot.live{background:var(--good)}
@@ -156,6 +166,8 @@
   #retryBtn{color:var(--accent);font-weight:700;font-size:var(--t-md);border:1px solid var(--line);
     border-radius:var(--r-sm);padding:0 var(--s3);height:40px;flex:none;background:var(--panel-2)}
   .sp-meta{font-size:var(--t-sm);color:var(--faint);margin-bottom:var(--s3)}
+  .sp-meta .stale{color:var(--bad)}
+  #retryBtn:disabled{color:var(--faint);opacity:.6}
   #histErr{display:none;margin:var(--s2) 0;padding:10px var(--s3);border-radius:var(--r-md);font-size:var(--t-md);
     color:var(--bad);border:1px solid color-mix(in srgb, var(--bad) 40%, var(--line));
     background:color-mix(in srgb, var(--bad) 8%, transparent)}
@@ -181,6 +193,7 @@
   .bib::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;
     background:linear-gradient(90deg,transparent,var(--accent-fill) 30%,var(--accent-fill) 70%,transparent);opacity:.9}
   .bib-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin-bottom:var(--s3)}
+  #nowState{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
   .legchip{font-family:var(--mono);font-weight:700;font-size:var(--t-md);color:var(--accent);
     border:1px solid color-mix(in srgb, var(--accent) 42%, transparent);
     background:color-mix(in srgb, var(--accent) 10%, transparent);
@@ -257,9 +270,13 @@
   /* ================= van filter ================= */
   .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s1);gap:var(--s1)}
   .seg button{flex:1;min-height:40px;border-radius:var(--r-sm);font-size:var(--t-md);font-weight:700;color:var(--dim)}
-  .seg button[aria-pressed="true"]{background:var(--panel);box-shadow:var(--shadow-sm);color:var(--accent)}
-  .seg button[data-van="1"][aria-pressed="true"]{color:var(--van1)}
-  .seg button[data-van="2"][aria-pressed="true"]{color:var(--van2)}
+  .seg button:active{transform:scale(.97)}
+  .seg button[aria-pressed="true"]{background:var(--panel-3);box-shadow:var(--shadow-sm);
+    color:var(--accent);border:1px solid color-mix(in srgb, var(--accent) 55%, transparent)}
+  .seg button[data-van="1"][aria-pressed="true"]{color:var(--van1);
+    border-color:color-mix(in srgb, var(--van1) 55%, transparent)}
+  .seg button[data-van="2"][aria-pressed="true"]{color:var(--van2);
+    border-color:color-mix(in srgb, var(--van2) 55%, transparent)}
 
   /* ================= race timeline ================= */
   .legrow{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-md);
@@ -277,7 +294,7 @@
     box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent)}
   .legrow .mid{min-width:0;display:flex;flex-direction:column;gap:3px}
   .rtop{display:flex;align-items:baseline;gap:6px;min-width:0}
-  .rtop .who{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rtop .who{flex:1;min-width:8ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rtop .who .name{white-space:nowrap}
   .legrow .name{font-weight:600;font-size:14px}
   .rtop .dist{font-family:var(--mono);font-variant-numeric:tabular-nums;
@@ -315,10 +332,14 @@
     padding:10px var(--s3);margin:var(--s2) 0 var(--s3);border:1px dashed var(--line);border-radius:var(--r-md);
     background:color-mix(in srgb, var(--panel) 50%, transparent)}
   .exline .ic{font-size:var(--t-base);text-align:center;line-height:1}
-  .exline .name{font-weight:700;font-size:var(--t-md)}
+  /* The whole name/sub block is the Maps target — the navigator taps this while driving. */
+  .exline .exmid{min-width:0;display:flex;flex-direction:column;justify-content:center;
+    min-height:var(--tap);color:inherit;text-decoration:none}
+  .exline .mapslink{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .exline .exmid:active{opacity:.6}
+  .exline .name{font-weight:700;font-size:var(--t-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .exline .after{font-size:var(--t-xs);color:var(--faint);margin-top:1px;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis}
-  .exline .after a{font-size:var(--t-xs)}
   .exline .when{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-md);text-align:right;color:var(--dim);white-space:nowrap}
   .exline .when.done{color:var(--good)}
   .exline .when.next{color:var(--accent);font-weight:700}
@@ -352,7 +373,14 @@
     border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
   .dlg-actions .ghost{border:1px solid var(--line);border-radius:var(--r-md);padding:0 var(--s4);
     min-height:48px;color:var(--dim);font-weight:600;background:var(--panel-2)}
-  .dlg-actions .danger{color:var(--bad);background:none}
+  /* Out of the action row and behind a second tap — it deletes a handoff
+     someone else recorded, and it used to sit 8px from Close at the same size. */
+  .clearlink{display:block;width:100%;margin-top:var(--s4);padding:var(--s2);
+    font-size:var(--t-md);font-weight:600;color:var(--dim);text-decoration:underline;
+    text-underline-offset:3px;min-height:var(--tap)}
+  .clearlink.armed{color:var(--bad);font-weight:800;text-decoration:none;
+    border:1px solid color-mix(in srgb, var(--bad) 50%, var(--line));border-radius:var(--r-md);
+    background:color-mix(in srgb, var(--bad) 10%, transparent)}
 
   /* roadkill stepper — big targets, no scroll wheel to fight in a moving van */
   #dlgKills{margin-top:var(--s5);border-top:1px solid var(--line);padding-top:var(--s4)}
@@ -365,18 +393,20 @@
     font-size:var(--t-2xl);font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center}
   .killstep button:active{background:var(--panel-3)}
   .killstep button:disabled{color:var(--faint);opacity:.5}
-  #killWheel{text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  .killmedal{text-align:center;font-size:var(--t-xs);font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim);margin:var(--s2) 0 var(--s3);
+    overflow-wrap:anywhere;min-height:1em}
+  #killWheel{min-width:0;text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
     font-size:40px;font-weight:800;line-height:1;letter-spacing:-.02em}
   #killWheel .kico{display:block;font-size:28px;margin-bottom:var(--s1);letter-spacing:0;
     transition:transform .15s ease}
-  #killWheel .unit{display:block;font-family:var(--sans);font-size:var(--t-xs);font-weight:700;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:var(--s1)}
   .killquick{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s2);margin-bottom:var(--s3)}
   .killquick button{min-height:40px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel-2);
     font-family:var(--mono);font-size:var(--t-md);font-weight:700;color:var(--dim)}
   .killquick .kreset{color:var(--faint);font-family:var(--sans);font-size:var(--t-sm);letter-spacing:.04em}
   #killSave{width:100%;background:var(--accent-fill);color:var(--accent-ink);
-    font-weight:800;border-radius:var(--r-md);min-height:48px;font-size:var(--t-base)}
+    font-weight:800;border-radius:var(--r-md);min-height:50px;font-size:var(--t-base)}
+  #dlgKills + .dlg-actions{margin-top:var(--s3)}
 
   @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -386,15 +416,19 @@
 <header id="topbar">
   <div class="topbar">
     <div class="ident">
-      <span class="wordmark">H2C</span>
-      <span id="raceClock" class="mono" aria-label="race clock">--:--:--</span>
-      <button id="finishChip" class="mono" aria-label="Projected finish — tap for vs planned"></button>
+      <div class="tstat">
+        <span class="tlabel" id="clockLbl">Elapsed</span>
+        <span id="raceClock" class="mono">--:--:--</span>
+      </div>
+      <button id="finishChip" class="tstat" aria-label="Projected finish — tap for vs planned">
+        <span class="tlabel" id="finishLbl">Finish</span>
+        <span class="mono" id="finishVal">--:--</span>
+      </button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
-      <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Sync status and change history">
-        <span class="dot"></span><span id="syncBadge"></span>
+      <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
+        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span><span id="syncBadge"></span>
       </button>
-      <button id="gearBtn" aria-label="Settings" aria-expanded="false">⚙</button>
     </div>
   </div>
 
@@ -408,6 +442,9 @@
 
   <div id="history" aria-label="Sync status and change history">
     <div class="sp-inner">
+      <a id="sheetLink" class="sheetlink" target="_blank" rel="noopener" hidden>
+        <span>Open the team sheet</span><span class="sheetarrow">↗</span>
+      </a>
       <div class="sp-top">
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Starting…</span>
@@ -427,6 +464,8 @@
   </div>
 </header>
 
+<div id="scrim" hidden></div>
+
 <main>
   <section class="bib" aria-labelledby="nowRunner">
     <div class="bib-top">
@@ -436,8 +475,8 @@
     <div id="nowRunner">—</div>
     <div class="bib-grid">
       <div class="stat"><div class="eyebrow" id="nowElapsedLbl">On leg</div><b id="nowElapsed">—</b></div>
-      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Leg plan</div><b id="nowPlan">—</b></div>
       <div class="stat"><div class="eyebrow" id="nowProjLbl">ETA</div><b id="nowProj">—</b></div>
+      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Planned fin</div><b id="nowPlan">—</b></div>
     </div>
     <div id="nowSub">—</div>
   </section>
@@ -498,10 +537,10 @@
       <button data-n="15">+15s</button><button data-n="60">+1m</button>
     </div>
     <div class="dlg-actions">
-      <button class="ghost danger" id="dlgClear">Clear</button>
       <button class="ghost" id="dlgCancel">Close</button>
       <button class="primary" id="dlgSave">Confirm time</button>
     </div>
+    <button class="clearlink" id="dlgClear">Clear this recorded time</button>
   </div>
   <div id="dlgKills" hidden>
     <div class="killhead">
@@ -510,9 +549,10 @@
     </div>
     <div class="killstep">
       <button id="killMinus" aria-label="one fewer roadkill">−</button>
-      <div id="killWheel" role="status" aria-live="polite" aria-label="roadkill count">0<span class="unit">roadkills</span></div>
+      <div id="killWheel" role="status" aria-live="polite" aria-label="roadkill count">0</div>
       <button id="killPlus" aria-label="one more roadkill">+</button>
     </div>
+    <div id="killMedal" class="killmedal"></div>
     <div class="killquick" id="killQuick" role="group" aria-label="quick add">
       <button data-k="0" class="kreset">Reset</button><button data-k="1">+1</button><button data-k="3">+3</button>
       <button data-k="5">+5</button><button data-k="10">+10</button>
@@ -531,6 +571,9 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxEin76NH4Z-ufIhlphEwBMSvuTgtPYkDM9c8SizctOk4d7zk5pbYr7sXoST0_WBzYRDg/exec',
   TEAM_KEY: 'seaside-or-bust-2026',     // must match Code.gs
   TZ: 'America/Los_Angeles',
+  // Team sheet, linked at the top of the status panel. Left blank the link
+  // simply doesn't render.
+  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1Thcw-psLA82BTYzx1Lu9RTfKz1t336c3lvpUaWvM8BU/edit',
   POLL_SEC: 60,
 };
 
@@ -731,6 +774,22 @@ function enqueueOp(kind, leg, when, kills){
   persist(); render(); sync();
 }
 
+/* A handoff cannot land before the previous one, and cannot be in the future
+   beyond a minute of slop. Without this the nudges walk the draft under the
+   previous leg's recorded end and commit a negative-duration leg to the sheet. */
+function draftBounds(d){
+  if (!d) return null;
+  const floor = d.kind === 'start' ? null
+              : d.leg === 1 ? (effStart() || null)
+              : actualEnd(d.leg - 1);
+  return { min: floor ? +floor + 1000 : -Infinity, max: Date.now() + 60000 };
+}
+function clampDraft(ms){
+  const b = draftBounds(draft);
+  if (!b) return ms;
+  return Math.min(Math.max(ms, b.min), b.max);
+}
+
 /* ---- plunger → stamp → confirm ---- */
 const $ = id => document.getElementById(id);
 $('plunger').addEventListener('click', () => {
@@ -754,7 +813,7 @@ $('confirmCancel').addEventListener('click', () => { draft = null; persist(); re
 document.querySelector('#confirmCard .nudges').addEventListener('click', (ev) => {
   const b = ev.target.closest('button[data-n]');
   if (!b || !draft) return;
-  draft.whenISO = new Date(+new Date(draft.whenISO) + Number(b.dataset.n) * 1000).toISOString();
+  draft.whenISO = new Date(clampDraft(+new Date(draft.whenISO) + Number(b.dataset.n) * 1000)).toISOString();
   persist(); render();
 });
 
@@ -794,7 +853,7 @@ function openDlg(mode){
     $('dlgLock').hidden = true;
     $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true; $('dlgKills').hidden = true;
     $('dlgTime').value = toHMS(dlgRef);
-    $('dlgClear').style.display = s ? '' : 'none';
+    $('dlgClear').style.display = s ? '' : 'none'; disarmClear();
   } else if (mode.kind === 'kills'){
     const L = LEGS[mode.leg - 1];
     const end = actualEnd(L.leg);
@@ -841,7 +900,7 @@ function openDlg(mode){
       $('dlgLock').hidden = true;
       $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true;
       $('dlgTime').value = toHMS(dlgRef);
-      $('dlgClear').style.display = end ? '' : 'none';
+      $('dlgClear').style.display = end ? '' : 'none'; disarmClear();
       $('dlgSave').textContent = end ? 'Confirm new time' : 'Confirm finish';
       $('dlgKills').hidden = true; // kills live behind the chase button on the row now
       if (isCurrent && !end) $('dlgSub').innerHTML = vanSpan(L.van) + ' · on the road now · the big button is the fast path';
@@ -852,30 +911,42 @@ function openDlg(mode){
 }
 const KILL_MAX = 99;
 const killWheel = $('killWheel');
+/* Halo medals, canonical.
+ *
+ * Halo runs two separate ladders. MULTIKILLS (Double Kill … Killionaire) are
+ * kills within ~4 seconds of each other. KILLING SPREES (Killing Spree 5,
+ * Killing Frenzy 10, Running Riot 15, Rampage 20, Untouchable 25, Invincible
+ * 30, Inconceivable 35, Unfrigginbelievable 40) are kills without dying, with
+ * no clock on them. Roadkills accumulate over a five-mile leg, so the spree
+ * ladder is the one that actually matches, and its thresholds are used exactly.
+ * The multikill names fill 2–4, where the spree ladder is silent.
+ * n=1 is First Strike — Halo's first-kill-of-the-match medal. It is not
+ * "First Blood"; that belongs to other franchises.
+ */
+const KILL_MEDALS = [
+  [40, '\u{1F480}\u{1F525}\u{1F451}', 'unfrigginbelievable'],
+  [35, '\u{1F480}\u{1F451}',           'inconceivable'],
+  [30, '\u{1F480}\u{1F451}',           'invincible'],
+  [25, '\u{1F480}',                     'untouchable'],
+  [20, '\u{1F451}',                     'rampage'],
+  [15, '\u{1F451}',                     'running riot'],
+  [10, '\u{1F525}\u{1F525}',           'killing frenzy'],
+  [5,  '\u{1F525}',                     'killing spree'],
+  [4,  '\u{1F525}',                     'overkill'],
+  [3,  '\u{1F3C3}\u{1F4A8}',           'triple kill'],
+  [2,  '\u{1F3C3}\u{1F4A8}',           'double kill'],
+  [1,  '\u{1F3C3}\u{1F4A8}',           'first strike'],
+  [0,  '\u{1F3C3}',                     'roadkills'],
+];
 function killFlair(n){
-  if (n === 0)  return ['\u{1F3C3}',              'roadkills'];
-  if (n === 1)  return ['\u{1F3C3}\u{1F4A8}',     'first blood'];
-  if (n === 2)  return ['\u{1F3C3}\u{1F4A8}',     'double kill'];
-  if (n === 3)  return ['\u{1F525}',               'triple kill'];
-  if (n === 4)  return ['\u{1F525}',               'overkill'];
-  if (n === 5)  return ['\u{1F525}',               'killtacular'];
-  if (n === 6)  return ['\u{1F525}\u{1F525}',      'killtrocity'];
-  if (n === 7)  return ['\u{1F525}\u{1F525}',      'killimanjaro'];
-  if (n === 8)  return ['\u{2694}️',          'killtastrophe'];
-  if (n === 9)  return ['\u{2694}️',          'killpocalypse'];
-  if (n === 10) return ['\u{2694}️',          'killionaire'];
-  if (n <= 15)  return ['\u{1F451}',               'running riot'];
-  if (n <= 20)  return ['\u{1F451}',               'rampage'];
-  if (n <= 30)  return ['\u{1F480}',               'untouchable'];
-  if (n <= 40)  return ['\u{1F480}\u{1F451}',      'invincible'];
-  if (n <= 50)  return ['\u{1F480}\u{1F451}',      'inconceivable'];
-  return              ['\u{1F480}\u{1F525}\u{1F451}', 'unfrigginbelievable'];
+  for (const [min, ico, phrase] of KILL_MEDALS) if (n >= min) return [ico, phrase];
+  return ['\u{1F3C3}', 'roadkills'];
 }
 function renderKills(){
   killWheel.dataset.val = String(dlgKillsVal);
   const [ico, phrase] = killFlair(dlgKillsVal);
-  killWheel.innerHTML = '<span class="kico">' + ico + '</span>' +
-    dlgKillsVal + '<span class="unit">' + phrase + '</span>';
+  killWheel.innerHTML = '<span class="kico">' + ico + '</span>' + dlgKillsVal;
+  $('killMedal').textContent = phrase;
   $('killMinus').disabled = dlgKillsVal <= 0;
   $('killPlus').disabled = dlgKillsVal >= KILL_MAX;
 }
@@ -906,7 +977,22 @@ $('dlgSave').addEventListener('click', () => {
   else enqueueOp('record', dlgMode.leg, hmsToDate($('dlgTime').value, dlgRef));
   dlg.close();
 });
+let clearArmed = false, clearTimer = null;
+function disarmClear(){
+  clearArmed = false;
+  clearTimeout(clearTimer);
+  $('dlgClear').classList.remove('armed');
+  $('dlgClear').textContent = 'Clear this recorded time';
+}
 $('dlgClear').addEventListener('click', () => {
+  if (!clearArmed){
+    clearArmed = true;
+    $('dlgClear').classList.add('armed');
+    $('dlgClear').textContent = 'Tap again to clear';
+    clearTimer = setTimeout(disarmClear, 4000);
+    return;
+  }
+  disarmClear();
   if (dlgMode.kind === 'start') enqueueOp('startClear', null, null);
   else enqueueOp('clear', dlgMode.leg, null);
   dlg.close();
@@ -921,6 +1007,13 @@ $('timeline').addEventListener('click', (ev) => {
   if (kb) return openDlg({ kind:'kills', leg: Number(kb.dataset.leg) });
   const row = ev.target.closest('.rowmain');
   if (row) openDlg({ kind:'leg', leg: Number(row.dataset.leg) });
+});
+$('nextUp').addEventListener('click', (ev) => {
+  if (!ev.target.closest || !ev.target.closest('#clearVan')) return;
+  vanFilter = 0;
+  LS.set('h2c2_van', 0);
+  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(Number(x.dataset.van) === 0)));
+  render();
 });
 $('nowSub').addEventListener('click', (ev) => {
   if (ev.target.closest('#adjStart')) openDlg({ kind:'start' });
@@ -1063,17 +1156,28 @@ function render(){
   const teamOff = cur ? proj[cur.leg] - cur.predEnd
                       : (actualEnd(36) ? actualEnd(36) - LEGS[35].predEnd : null);
   const seaside = actualEnd(36) || proj[36];
-  if (showDelta && teamOff != null){
+  if (showDelta && started && teamOff != null){
     const td = fmtDelta(teamOff);
-    $('finishChip').textContent = td.txt;
-    $('finishChip').className = 'mono ' + td.cls;
+    $('finishLbl').textContent = 'Vs planned';
+    $('finishVal').textContent = td.txt;
+    $('finishChip').className = 'tstat ' + td.cls;
+  } else if (showDelta){
+    $('finishLbl').textContent = 'Vs planned';
+    $('finishVal').textContent = 'not started';
+    $('finishChip').className = 'tstat';
   } else {
-    $('finishChip').textContent = '\u{1F3C1} ' + dayTag(seaside) + fmtT(seaside);
-    $('finishChip').className = 'mono';
+    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned fin';
+    $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
+    $('finishChip').className = 'tstat';
   }
 
-  if (started) $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
-  else $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : 'ready';
+  if (started){
+    $('clockLbl').textContent = cur ? 'Elapsed' : 'Final';
+    $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
+  } else {
+    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until gun' : 'Ready';
+    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : '--:--:--';
+  }
 
   if (!cur){
     $('nowLeg').textContent = 'FINISH';
@@ -1081,12 +1185,12 @@ function render(){
     $('nowRunner').textContent = 'Seaside 🎉';
     const fin = actualEnd(36), st = effStart();
     $('nowElapsedLbl').textContent = 'Total time';
-    $('nowPlanLbl').textContent = 'Planned';
     $('nowProjLbl').textContent = 'Crossed';
+    $('nowPlanLbl').textContent = 'Planned';
     $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
-    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
     $('nowProj').innerHTML = fin ? statT(fin) : '—';
-    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust start</button>';
+    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
+    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust gun time</button>';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
     $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
@@ -1094,21 +1198,21 @@ function render(){
     $('nowRunner').textContent = dnn(cur);
     if (started && s){
       $('nowElapsedLbl').textContent = 'On leg';
-      $('nowPlanLbl').textContent = 'Leg plan';
       $('nowProjLbl').textContent = 'ETA';
+      $('nowPlanLbl').textContent = 'Planned fin';
       $('nowElapsed').textContent = fmtDur(now - s);
-      $('nowPlan').textContent = fmtDur(cur.predDur);
       $('nowProj').innerHTML = statT(proj[cur.leg]);
-      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) + ' · planned finish ' +
-        dayTag(cur.predEnd) + fmtT(cur.predEnd) +
-        '</span><button id="adjStart">Adjust start</button>';
+      $('nowPlan').innerHTML = statT(cur.predEnd);
+      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) +
+        ' · leg plan ' + fmtDur(cur.predDur) +
+        '</span><button id="adjStart">Adjust gun time</button>';
     } else {
       $('nowElapsedLbl').textContent = 'Gun time';
-      $('nowPlanLbl').textContent = 'Leg plan';
-      $('nowProjLbl').textContent = 'Planned finish';
+      $('nowProjLbl').textContent = 'Leg plan';
+      $('nowPlanLbl').textContent = 'Planned fin';
       $('nowElapsed').textContent = fmtT(RACE_PLANNED);
-      $('nowPlan').textContent = fmtDur(cur.predDur);
-      $('nowProj').innerHTML = statT(cur.predEnd);
+      $('nowProj').textContent = fmtDur(cur.predDur);
+      $('nowPlan').innerHTML = statT(cur.predEnd);
       $('nowSub').textContent = 'Planned gun time: ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' wave at Timberline.';
     }
   }
@@ -1145,6 +1249,12 @@ function render(){
     }
     $('confirmTime').textContent = fmtTS(when);
     $('confirmGo').textContent = 'Confirm ' + fmtTS(when);
+    // Let the limit be felt on the button before Confirm can commit past it.
+    const bounds = draftBounds(draft);
+    document.querySelectorAll('#confirmCard .nudges button').forEach(b => {
+      const n = Number(b.dataset.n) * 1000;
+      b.disabled = bounds && (n < 0 ? +when + n < bounds.min : +when + n > bounds.max);
+    });
   } else if (!started){
     $('plunger').disabled = false;
     $('plunger').classList.add('startmode');
@@ -1172,11 +1282,17 @@ function render(){
 
   const upcoming = LEGS.filter(L => !actualEnd(L.leg) && (!cur || L.leg > cur.leg))
                        .filter(L => !vanFilter || L.van === vanFilter).slice(0, 3);
+  const legsLeft = LEGS.filter(L => !actualEnd(L.leg)).length;
+  const vanDoneOnly = !upcoming.length && vanFilter && legsLeft > 0;
   $('nextUp').innerHTML = upcoming.length ? upcoming.map(L =>
     '<div class="nextrow"><span class="legchip c' + L.van + '">L' + L.leg + '</span>' +
     '<span class="who">' + esc(dnn(L)) + '</span>' +
     '<span class="eta">ETA <b>' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</b></span></div>'
-  ).join('') : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
+  ).join('') : vanDoneOnly
+    ? '<button class="nextrow" id="clearVan"><span class="who">Van ' + vanFilter + ' is done — ' +
+      legsLeft + ' leg' + (legsLeft === 1 ? '' : 's') + ' still out there</span>' +
+      '<span class="eta">show all ↗</span></button>'
+    : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
   // team kills total
   let totalKills = 0, v1Kills = 0, v2Kills = 0;
@@ -1197,8 +1313,9 @@ function render(){
     const plan = x.afterLeg === 0 ? RACE_PLANNED : LEGS[x.afterLeg - 1].predEnd;
     return '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
       '<span class="ic">' + ic + '</span>' +
-      '<div><div class="name">' + x.name + '</div>' +
-      '<div class="after">' + sub + ' · <a href="' + x.url + '" target="_blank" rel="noopener">Maps ↗</a></div></div>' +
+      '<a class="exmid" href="' + x.url + '" target="_blank" rel="noopener">' +
+      '<div class="name">' + esc(x.name) + '</div>' +
+      '<div class="after">' + sub + ' · <span class="mapslink">Maps ↗</span></div></a>' +
       '<div><div class="when ' + (done ? 'done' : isNext ? 'next' : '') + '">' +
       (done ? '✓ ' : 'ETA ') + dayTag(when) + fmtT(when) + '</div>' +
       '<div class="plan">planned ' + dayTag(plan) + fmtT(plan) + '</div></div></div>';
@@ -1207,7 +1324,7 @@ function render(){
   for (const L of LEGS){
     if (!vanFilter || L.van === vanFilter){
       const end = actualEnd(L.leg);
-      const isCur = cur && cur.leg === L.leg;
+      const isCur = started && cur && cur.leg === L.leg;
       const q = queuedFor(L.leg);
       const kills = killsFor(L.leg);
       // Every leg reads the same way: when it starts, when it ends, how long it
@@ -1220,8 +1337,7 @@ function render(){
         const d = fmtDelta(end - L.predEnd);
         // One number, and it's the whole race's: where the relay stands against
         // the planned finish as of this handoff.
-        status = '<span class="rstat ' + d.cls + '">' + d.txt + '</span>' +
-                 (q ? '<span class="tag q">QUEUED</span>' : '');
+        status = '<span class="rstat ' + d.cls + '">' + d.txt + '</span>';
       } else if (isCur){
         status = '<span class="rstat live">on the road</span>';
       }
@@ -1232,10 +1348,11 @@ function render(){
           '<span class="rtop"><span class="who"><span class="name">' + esc(dnn(L)) + '</span>' +
           '<span class="dist">' + L.miles.toFixed(2) + ' mi</span></span>' + status + '</span>' +
           '<span class="rtimes' + (end ? '' : isCur ? ' cur' : ' est') + '">' +
-            (end || isCur ? '' : '<span class="estlbl">est</span>') +
+            (end ? '' : '<span class="estlbl">est</span>') +
             '<span class="range">' + dayTag(rStart) + fmtT(rStart) + ' → ' +
             '<b>' + dayTag(rFinish) + fmtT(rFinish) + '</b></span>' +
-            '<span class="dur">' + fmtDur(rFinish - rStart) + '</span>' +
+            (q ? '<span class="tag q">QUEUED</span>' : '') +
+            '<span class="dur">' + fmtDur(isCur ? now - rStart : rFinish - rStart) + '</span>' +
           '</span>' +
         '</span></button>' +
         (end ? '<button class="killbtn"' + (kills == null ? ' data-empty="1"' : '') + ' data-leg="' + L.leg +
@@ -1264,34 +1381,45 @@ function render(){
   if (!CONFIG.SCRIPT_URL){ badge = 'local'; text = 'Local only — no sheet URL'; }
   else if (!navigator.onLine){ cls = 'offline'; badge = n ? 'Offline · ' + n : 'Offline';
     text = n ? 'Offline · ' + n + ' queued' : 'Offline'; }
-  else if (lastErr){ cls = 'error'; badge = n ? String(n) : 'Retry'; text = n ? n + ' not logged — tap' : 'Sync error — tap'; }
-  else if (n || syncing){ cls = 'pending'; badge = n ? String(n) : '…'; text = (n || '') + ' syncing…'; }
+  else if (lastErr){ cls = 'error'; badge = n ? n + ' failed' : 'Retry'; text = n ? n + ' not logged — tap' : 'Sync error — tap'; }
+  else if (n || syncing){ cls = 'pending'; badge = n ? n + ' sending' : 'Sending'; text = (n || '') + ' syncing…'; }
   else { cls = 'live'; badge = ''; text = 'Live · synced'; }
   $('syncPill').className = cls;
   $('syncBadge').textContent = badge;
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
-  $('lastSync').textContent = lastSyncAt ? fmtTS(new Date(lastSyncAt)) : 'never';
+  // Age, not a timestamp — on a 30-hour race "6:20:37 PM" says nothing about staleness.
+  if (lastSyncAt){
+    const age = Date.now() - lastSyncAt;
+    $('lastSync').textContent = age < 60000 ? 'just now'
+      : age < 3600000 ? Math.floor(age / 60000) + ' min ago'
+      : Math.floor(age / 3600000) + 'h ' + Math.floor((age % 3600000) / 60000) + 'm ago';
+    $('lastSync').className = 'mono' + (age > 300000 ? ' stale' : '');
+  } else { $('lastSync').textContent = 'never'; $('lastSync').className = 'mono stale'; }
+  $('retryBtn').disabled = !navigator.onLine;
+  $('retryBtn').textContent = navigator.onLine ? 'Sync now' : 'Offline';
 }
 
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
 function setHistory(open){
   $('history').classList.toggle('show', open);
+  $('scrim').hidden = !open;
   $('syncPill').setAttribute('aria-expanded', String(open));
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-$('gearBtn').addEventListener('click', () => {
-  toggleHistory();
-  $('gearBtn').setAttribute('aria-expanded', String($('history').classList.contains('show')));
-});
 $('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
-document.addEventListener('click', (ev) => {
-  const t = ev.target;
-  if (t && t.closest && $('history').classList.contains('show') &&
-      !t.closest('#history') && !t.closest('#syncPill') && !t.closest('#gearBtn')) setHistory(false);
+$('scrim').addEventListener('click', (ev) => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  setHistory(false);
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') setHistory(false); });
+
+if (CONFIG.SHEET_URL){
+  $('sheetLink').setAttribute('href', CONFIG.SHEET_URL);
+  $('sheetLink').hidden = false;
+}
 
 /* ================= theme ================= */
 const THEMES = ['auto', 'light', 'dark'];
@@ -1333,18 +1461,30 @@ document.querySelector('.seg').addEventListener('click', (ev) => {
 document.querySelectorAll('.seg button').forEach(b =>
   b.setAttribute('aria-pressed', String(Number(b.dataset.van) === vanFilter)));
 
-let wakeLock = null;
-function updateAwakeLabel(){ $('awakeVal').textContent = wakeLock ? 'on' : 'off'; }
-$('awakeItem').addEventListener('click', async () => {
-  try {
-    if (wakeLock){ await wakeLock.release(); wakeLock = null; }
-    else if ('wakeLock' in navigator){
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; updateAwakeLabel(); render(); });
-    }
-    updateAwakeLabel();
-  } catch(e){}
-});
+let wakeLock = null, wakeFailed = false;
+function updateAwakeLabel(){
+  $('awakeVal').textContent = wakeFailed ? 'unavailable' : wakeLock ? 'on' : 'off';
+}
+// No Wake Lock at all: hide the row rather than offer a switch that does nothing.
+if (!('wakeLock' in navigator)){
+  $('awakeItem').hidden = true;
+} else {
+  $('awakeItem').addEventListener('click', async () => {
+    try {
+      wakeFailed = false;
+      if (wakeLock){ await wakeLock.release(); wakeLock = null; }
+      else {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; updateAwakeLabel(); render(); });
+      }
+    } catch (e) {
+      // The request can be refused (low battery, backgrounded tab). Swallowing it
+      // left the row reading "off" while the navigator's phone slept anyway.
+      wakeLock = null;
+      wakeFailed = true;
+    } finally { updateAwakeLabel(); }
+  });
+}
 
 /* ================= Battery-aware loop ================= */
 let tickId = null, tickCount = 0;
