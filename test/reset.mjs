@@ -16,6 +16,8 @@
  *   node test/reset.mjs clear <exec-url> <team-key> --yes
  *   node test/reset.mjs clear <exec-url> <team-key>            # dry run
  *   node test/reset.mjs plan  "2026-08-20T17:00"               # local Pacific
+ *   node test/reset.mjs drill <exec-url> <team-key> --yes      # gun + legs 1-12
+ *   node test/reset.mjs drill --dry                            # preview, no network
  */
 
 import { readFileSync } from 'node:fs';
@@ -106,11 +108,122 @@ async function clear(url, key, confirmed) {
   if (left.length) { console.log('Legs that did not clear:', left.map((l) => l.leg).join(', ')); process.exit(1); }
 }
 
+/* ------------------------------------------------------------------ drill */
+/* Standard gun is 12:45 PM Pacific. Pick the most recent one far enough back
+   that leg 12 has already finished, so the drill reads as a race in progress
+   rather than one with finish times in the future. */
+function drillGun(rows, fresh) {
+  const through12 = rows[11].predEnd - rows[0].predStart;
+  // --fresh: place the gun so leg 12 landed ~8 min ago, so leg 13 reads as a
+  // runner who just started rather than one out there for most of a day.
+  if (fresh) return new Date(Date.now() - through12 - 8 * 60000);
+  const parts = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  for (let back = 0; back < 7; back++) {
+    const day = parts(new Date(Date.now() - back * 86400000));
+    const gun = new Date(day + 'T12:45:00-07:00');
+    if (Date.now() - gun >= through12 + 300000) return gun;
+  }
+  throw new Error('could not place a gun time');
+}
+
+/* Deterministic jitter — a drill you can re-run and compare against. */
+function rng(seed) { let s = seed; return () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff; }
+
+function drillPlan(fresh) {
+  const rows = bakedPlan();
+  const gun = drillGun(rows, fresh);
+  const rand = rng(20260828);
+  const base = +gun - +rows[0].predStart;
+  let drift = 0;
+  const recs = [];
+  for (let i = 0; i < 12; i++) {
+    drift += Math.round((rand() * 200 - 70));            // seconds, accumulating
+    recs.push({ leg: i + 1, when: new Date(+rows[i].predEnd + base + drift * 1000) });
+  }
+  // Two dead zones. A van drops service, keeps pressing, and the phone flushes
+  // the whole batch when it comes back — the case the app exists for.
+  const batches = [
+    { phone: 'van 1', legs: [1, 2],        note: 'online' },
+    { phone: 'van 1', legs: [3, 4, 5],     note: 'DEAD ZONE — queued, flushed at the Sandy exchange' },
+    { phone: 'van 1', legs: [6],           note: 'online' },
+    { phone: 'van 2', legs: [7, 8],        note: 'online' },
+    { phone: 'van 2', legs: [9, 10, 11],   note: 'DEAD ZONE — queued through the canyon' },
+    { phone: 'van 2', legs: [12],          note: 'online' },
+  ];
+  return { gun, recs, batches, rows };
+}
+
+async function drill(url, key, confirmed, dry, fresh) {
+  const { gun, recs, batches, rows } = drillPlan(fresh);
+  const at = (leg) => recs[leg - 1].when;
+
+  console.log(`\nGun ${pretty(gun)}${fresh ? ' (--fresh: placed so leg 12 just landed)' : ' (standard 12:45 PM start)'}`);
+  console.log('Recording legs 1-12, through the second van exchange (OMSI Gravel Lot).\n');
+  for (const b of batches) {
+    console.log(`  ${b.phone}  legs ${b.legs.join(',').padEnd(8)} ${b.legs.map((l) => pretty(at(l))).join('  ')}`);
+    if (b.note !== 'online') console.log(`          ${b.note}`);
+  }
+
+  // The plan has to agree with the drill or every delta reads in days. This is
+  // the same output as `plan`, anchored to the gun above.
+  const delta = gun - rows[0].predStart;
+  console.log('\nPaste these into the predicted Start Time / End Time columns at Leg 1');
+  console.log('so vs-planned reads in minutes instead of days:\n');
+  for (const r of rows) {
+    console.log('  ' + sheetStamp(new Date(+r.predStart + delta)) + '\t' + sheetStamp(new Date(+r.predEnd + delta)));
+  }
+
+  if (dry) { console.log('\nDry run — nothing sent.'); return; }
+  if (!url || !key) { console.log('\nUsage: node test/reset.mjs drill <exec-url> <team-key> --yes'); process.exit(1); }
+
+  const get = async () => (await fetch(`${url}?key=${encodeURIComponent(key)}`, { redirect: 'follow' })).json();
+  const post = async (body) => (await fetch(url, {
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ key, ...body }),
+  })).json();
+
+  const before = await get();
+  if (!before.ok) throw new Error('read failed: ' + before.error);
+  const dirty = before.state.legs.filter((l) => l.actEnd).length;
+  if (dirty && !confirmed) {
+    console.log(`\n${dirty} leg(s) already recorded. Re-run with --yes to wipe and re-seed.`);
+    return;
+  }
+  if (!confirmed) { console.log('\nDry run against the live sheet. Re-run with --yes to write.'); return; }
+
+  console.log('\nClearing…');
+  let r = await post({ clears: before.state.legs.map((l) => l.leg), raceStart: 'CLEAR' });
+  if (!r.ok) throw new Error('clear failed: ' + r.error);
+
+  console.log('Setting the gun…');
+  r = await post({ raceStart: gun.toISOString() });
+  if (!r.ok) throw new Error('race start failed: ' + r.error);
+
+  for (const b of batches) {
+    r = await post({ records: b.legs.map((l) => ({ leg: l, endTimeISO: at(l).toISOString() })) });
+    if (!r.ok) throw new Error(`batch ${b.legs.join(',')} failed: ` + r.error);
+    console.log(`  sent ${b.phone} legs ${b.legs.join(',')}${b.note === 'online' ? '' : '  (flushed after a dead zone)'}`);
+  }
+  // A phone that timed out on a batch it actually won, retrying — must be idempotent.
+  await post({ records: [{ leg: 5, endTimeISO: at(5).toISOString() }] });
+
+  const s = (await get()).state;
+  const done = s.legs.filter((l) => l.actEnd).length;
+  const wrong = s.legs.slice(0, 12).filter((l, i) => Math.abs(new Date(l.actEnd) - at(i + 1)) > 2000);
+  console.log(`\n${done} legs recorded${done === 12 ? '' : ' (expected 12)'}, ${wrong.length} mismatched.`);
+  console.log(`Leg 13 (${s.legs[12].runner}) is now the live leg.`);
+  if (done !== 12 || wrong.length) process.exit(1);
+}
+
 const [, , cmd, ...rest] = process.argv;
 if (cmd === 'plan') plan(rest[0]);
 else if (cmd === 'clear') await clear(rest[0], rest[1], rest.includes('--yes'));
+else if (cmd === 'drill') await drill(rest[0], rest[1], rest.includes('--yes'), rest.includes('--dry'), rest.includes('--fresh'));
 else {
   console.log('node test/reset.mjs clear <exec-url> <team-key> [--yes]   clear recorded times + race start');
   console.log('node test/reset.mjs plan  "2026-08-20T17:00"              print a re-anchored planned schedule');
+  console.log('node test/reset.mjs drill <exec-url> <team-key> --yes     gun + legs 1-12 with dead zones');
+  console.log('node test/reset.mjs drill --dry [--fresh]              preview it without touching anything');
   process.exit(1);
 }
