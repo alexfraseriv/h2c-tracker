@@ -282,10 +282,6 @@
 
   /* ================= section heads ================= */
   .sechead{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin-bottom:var(--s2)}
-  .killtotal{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-sm);
-    font-weight:700;color:var(--dim);background:var(--panel);border:1px solid var(--line);
-    border-radius:var(--r-pill);padding:3px 10px}
-  .killtotal:empty{display:none}
   .legendnote{font-size:var(--t-sm);color:var(--faint);margin-top:var(--s2);line-height:1.5}
   .legendnote b{color:var(--dim);font-weight:700}
 
@@ -571,7 +567,6 @@
   <section>
     <div class="sechead">
       <span class="eyebrow">Race timeline</span>
-      <span class="killtotal" id="killTotal"></span>
     </div>
     <div id="timeline"></div>
     <p class="legendnote">Each leg reads <b>start → finish</b> with its duration on the right.
@@ -1372,10 +1367,9 @@ function render(){
       '<span class="eta">show all ↗</span></button>'
     : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
-  // team kills total
-  let totalKills = 0, v1Kills = 0, v2Kills = 0;
-  for (const L of LEGS){ const k = killsFor(L.leg) || 0; totalKills += k; if (L.van === 1) v1Kills += k; else v2Kills += k; }
-  $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' total · <span class="v1">' + v1Kills + ' V1</span> · <span class="v2">' + v2Kills + ' V2</span>' : '';
+  // team kills total (shown in the top bar)
+  let totalKills = 0;
+  for (const L of LEGS) totalKills += killsFor(L.leg) || 0;
 
   // top-bar mini stats: legs done + total roadkills, beside the clock
   const legsDone = LEGS.length - legsLeft;
