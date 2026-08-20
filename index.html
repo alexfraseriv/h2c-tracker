@@ -295,10 +295,14 @@
     background:repeating-linear-gradient(-45deg,#1a1503 0 8px,transparent 8px 16px);opacity:.25}
   #plunger:active{transform:translateY(5px);box-shadow:0 2px 0 var(--accent-deep), 0 6px 14px -10px rgba(0,0,0,.4)}
   #plunger small{font-size:var(--t-sm);font-weight:600;opacity:.72;font-family:var(--mono);
-    display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
-  /* The runner handoff is the thing you read at speed — give it real size. */
-  #plunger small .names{font-size:var(--t-lg);font-weight:800;opacity:1;letter-spacing:-.01em}
-  #plunger small .exloc{font-size:var(--t-xs);font-weight:600;opacity:.8}
+    display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.1}
+  /* The runner handoff is what you read at the exchange — it's the biggest text
+     on the button, at least as large as the "Record handoff" label above it. */
+  #plunger small .names{font-size:24px;font-weight:800;opacity:1;letter-spacing:-.02em}
+  #plunger small .exloc{font-size:var(--t-xs);font-weight:600;opacity:.8;margin-top:1px}
+  /* Let the names lead: the action reads as a caption above them (start stays big). */
+  #plunger:not(.startmode) #plungerLabel{font-size:var(--t-md);font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;opacity:.8}
   #plunger:disabled{background:var(--panel-2);color:var(--faint);box-shadow:none;transform:none;border:1px solid var(--line)}
   #plunger:disabled::after{display:none}
   #plunger.startmode{background:var(--good-fill);color:var(--good-ink);
@@ -1540,8 +1544,7 @@ function render(){
     $('plunger').classList.remove('startmode');
     if (nextLeg){
       const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
-      // Van-to-van swaps are the "major exchanges"; a plain leg change is not.
-      $('plungerLabel').textContent = swapEx ? 'Record major exchange handoff' : 'Record handoff';
+      $('plungerLabel').textContent = 'Record handoff';
       $('plungerSub').innerHTML = '<span class="names">' + esc(dn(cur.runner)) + ' → ' + esc(dn(nextLeg.runner)) + '</span>' +
         (swapEx ? '<span class="exloc">' + esc(swapEx.name) + '</span>' : '');
     } else {
