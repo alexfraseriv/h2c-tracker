@@ -88,22 +88,17 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;gap:var(--s5);min-width:0}
-  /* Every clock on screen says what it is. */
+  .ident{display:flex;align-items:center;min-width:0;flex:1;overflow:hidden}
+  .topbar > div:last-child{flex:none}
+  /* The race clock says what it is. */
   .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
     font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
-  /* Where the whole relay reaches Seaside. One tap swaps it for the vs-planned
-     delta, and the label above changes with it so the number is never bare. */
-  #finishChip{flex:none}
-  #finishVal{font-size:var(--t-base);font-weight:700;color:var(--ink);line-height:1.1;
-    white-space:nowrap;border-bottom:1px dotted var(--faint);padding-bottom:1px}
-  #finishChip.ahead #finishVal{color:var(--good)}
-  #finishChip.behind #finishVal{color:var(--accent)}
 
-  /* collapsed sync indicator: a dot. It only grows a word when something is wrong. */
+  /* Sync status lives in the bar as a bare dot — green synced, yellow working,
+     red offline or errored. The words behind it are in the status menu. */
   #syncPill{position:relative;display:flex;align-items:center;gap:7px;height:40px;padding:0 12px;
     border-radius:var(--r-pill);border:1px solid var(--line);background:var(--panel);
     font-size:var(--t-sm);font-weight:600;color:var(--dim);white-space:nowrap;flex:none;
@@ -111,15 +106,21 @@
   #syncPill::after{content:'';position:absolute;inset:-5px;border-radius:inherit}
   #syncPill .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none;
     box-shadow:0 0 0 0 currentColor}
-  #syncPill.live .dot{background:var(--good)}
+  #syncPill.live .dot{background:var(--good-fill)}
   .gearico{font-size:15px;line-height:1;opacity:.85}
-  #syncPill.pending .dot{background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+  #syncPill.pending .dot{background:var(--accent-fill);animation:pulse 1.4s ease-in-out infinite}
   #syncPill.offline .dot{background:var(--bad)}
-  #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line));color:var(--bad)}
+  #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line))}
   #syncPill.error .dot{background:var(--bad)}
   #syncPill[aria-expanded="true"]{background:var(--panel-2)}
-  #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
+  /* Refresh — pull the sheet now, left of the status/settings control. */
+  #refreshBtn{width:40px;height:40px;flex:none;border-radius:var(--r-pill);
+    border:1px solid var(--line);background:var(--panel);color:var(--dim);
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
+  #refreshBtn:active{background:var(--panel-2);color:var(--ink)}
+  #refreshBtn.spin{animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   .sp-sec{margin:var(--s4) 0 var(--s1);padding-top:var(--s3);border-top:1px solid var(--line)}
   .setrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
@@ -128,6 +129,15 @@
   .setrow:active{background:var(--panel-2)}
   .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
   .setrow[hidden]{display:none}
+  /* glossary */
+  .gloss{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s4)}
+  .gsec{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+    color:var(--faint);margin-top:var(--s2)}
+  .gsec:first-child{margin-top:0}
+  .gterm{display:flex;flex-direction:column;gap:2px}
+  .gterm b{font-size:var(--t-base);font-weight:700;color:var(--ink)}
+  .gterm>span{font-size:var(--t-md);color:var(--dim);line-height:1.45}
+  .gterm>span b{font-family:var(--mono);font-size:var(--t-sm);font-weight:700;color:var(--dim)}
 
 
   /* who is running right now — slides in once the bib card scrolls away */
@@ -163,11 +173,14 @@
   .sp-top .dot.pending{background:var(--accent)}
   .sp-top .dot.offline,.sp-top .dot.error{background:var(--bad)}
   #syncText{font-weight:700;font-size:var(--t-base);flex:1;min-width:0}
-  #retryBtn{color:var(--accent);font-weight:700;font-size:var(--t-md);border:1px solid var(--line);
-    border-radius:var(--r-sm);padding:0 var(--s3);height:40px;flex:none;background:var(--panel-2)}
+  #retryBtn{width:40px;height:40px;flex:none;border-radius:var(--r-pill);
+    border:1px solid var(--line);background:var(--panel);color:var(--dim);
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
+  #retryBtn:active{background:var(--panel-2);color:var(--ink)}
+  #retryBtn.spin{animation:spin .9s linear infinite}
+  #retryBtn:disabled{color:var(--faint);opacity:.6}
   .sp-meta{font-size:var(--t-sm);color:var(--faint);margin-bottom:var(--s3)}
   .sp-meta .stale{color:var(--bad)}
-  #retryBtn:disabled{color:var(--faint);opacity:.6}
   #histErr{display:none;margin:var(--s2) 0;padding:10px var(--s3);border-radius:var(--r-md);font-size:var(--t-md);
     color:var(--bad);border:1px solid color-mix(in srgb, var(--bad) 40%, var(--line));
     background:color-mix(in srgb, var(--bad) 8%, transparent)}
@@ -199,12 +212,14 @@
     background:color-mix(in srgb, var(--accent) 10%, transparent);
     border-radius:var(--r-sm);padding:4px 8px;letter-spacing:.04em;flex:none}
   #nowRunner{font-size:var(--t-3xl);font-weight:800;letter-spacing:-.02em;line-height:1.08;margin-bottom:var(--s4)}
-  .bib-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);
+  /* Three stats spread across the width, label over value, left-aligned —
+     the same shape as the top bar's ELAPSED / FINISH pair. */
+  .bib-grid{display:flex;justify-content:space-between;gap:var(--s4);
     border-top:1px solid var(--line-soft);padding-top:var(--s3)}
+  .bib-grid .stat{min-width:0}
   .stat .eyebrow{margin-bottom:var(--s1);font-size:var(--t-2xs)}
   .stat b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
     font-weight:700;letter-spacing:-.01em;white-space:nowrap}
-  .stat b .day{font-size:var(--t-xs);color:var(--dim);margin-right:4px}
   #nowDelta.ahead{color:var(--good)} #nowDelta.behind{color:var(--accent)}
   #nowSub{margin-top:var(--s3);font-size:var(--t-md);color:var(--dim);
     border-top:1px solid var(--line-soft);padding-top:var(--s3);
@@ -438,14 +453,11 @@
         <span class="tlabel" id="clockLbl">Elapsed</span>
         <span id="raceClock" class="mono">--:--:--</span>
       </div>
-      <button id="finishChip" class="tstat" aria-label="Projected finish — tap for vs planned">
-        <span class="tlabel" id="finishLbl">Finish</span>
-        <span class="mono" id="finishVal">--:--</span>
-      </button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
+      <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
       <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
-        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span><span id="syncBadge"></span>
+        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span>
       </button>
     </div>
   </div>
@@ -466,7 +478,7 @@
       <div class="sp-top">
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Starting…</span>
-        <button id="retryBtn">Sync now</button>
+        <button id="retryBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
       </div>
       <div class="sp-meta">Sheet last read <span class="mono" id="lastSync">never</span></div>
       <div id="histErr"></div>
@@ -474,6 +486,7 @@
       <div class="sp-sec"><span class="eyebrow">Settings</span></div>
       <button class="setrow" id="themeItem"><span>Theme</span><span id="themeVal" class="setval">auto</span></button>
       <button class="setrow" id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="setval">off</span></button>
+      <button class="setrow" id="helpItem"><span>Help &amp; glossary</span><span class="setval">?</span></button>
 
       <div class="sp-sec"><span class="eyebrow">Change history</span></div>
       <div id="histList"></div>
@@ -494,7 +507,7 @@
     <div class="bib-grid">
       <div class="stat"><div class="eyebrow" id="nowElapsedLbl">On leg</div><b id="nowElapsed">—</b></div>
       <div class="stat"><div class="eyebrow" id="nowProjLbl">ETA</div><b id="nowProj">—</b></div>
-      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Planned fin</div><b id="nowPlan">—</b></div>
+      <div class="stat"><div class="eyebrow" id="nowPlanLbl">Planned</div><b id="nowPlan">—</b></div>
     </div>
     <div id="nowSub">—</div>
   </section>
@@ -580,6 +593,37 @@
   <div class="dlg-actions" id="dlgCloseOnly" hidden>
     <button class="ghost" id="dlgClose2" style="flex:1">Close</button>
   </div>
+</dialog>
+
+<dialog id="helpDlg" tabindex="-1">
+  <h2>What the words mean</h2>
+  <div class="sub">Every term the tracker uses · all times are Pacific</div>
+  <div class="gloss">
+    <div class="gsec">Reading a runner</div>
+    <div class="gterm"><b>Leg</b><span>One of the 36 relay segments (<b>L1</b>–<b>L36</b>). Each person runs several.</span></div>
+    <div class="gterm"><b>Van 1 · Van 2</b><span>The two squads of six, shown in blue and purple. They leapfrog, one resting while the other runs.</span></div>
+    <div class="gterm"><b>Start</b><span>When a leg begins — the time the runner took over from the leg before.</span></div>
+    <div class="gterm"><b>On the road</b><span>The runner is out on their leg right now.</span></div>
+    <div class="gterm"><b>On leg</b><span>How long the current runner has been out on this leg.</span></div>
+    <div class="gterm"><b>Pace</b><span>Minutes per mile for a leg.</span></div>
+    <div class="gterm"><b>Total time</b><span>How long a leg takes, start to finish.</span></div>
+
+    <div class="gsec">Times and the plan</div>
+    <div class="gterm"><b>ETA</b><span>The estimated finish time of a leg — when that runner reaches the next exchange. Re-figured from the times actually recorded so far, so it sharpens as the race runs.</span></div>
+    <div class="gterm"><b>Planned</b><span>The schedule from the team sheet — what was expected before anyone ran.</span></div>
+    <div class="gterm"><b>Est.</b><span>Marks a leg that hasn't run yet: its start and finish are estimates, not recorded times.</span></div>
+    <div class="gterm"><b>Exchange · handoff</b><span>Where one runner passes to the next (Sandy, OMSI, …). The van exchanges are where Van 1 and Van 2 trade off.</span></div>
+    <div class="gterm"><b>Adjust race start</b><span>Corrects the recorded race start time. Every ETA re-bases from it, so only change it if the start time is wrong.</span></div>
+
+    <div class="gsec">Top bar</div>
+    <div class="gterm"><b>Elapsed · Until start</b><span>The big clock: counts down to the start, then counts up from it.</span></div>
+    <div class="gterm"><b>The dot</b><span>Sync status, at a glance. Green = everything's saved to the sheet. Amber = sending, or changes are waiting. Red = offline, or a problem. Tap it for the details and settings.</span></div>
+    <div class="gterm"><b>↻ Refresh</b><span>Pulls the latest from the sheet right now, instead of waiting for the once-a-minute check.</span></div>
+
+    <div class="gsec">Roadkills</div>
+    <div class="gterm"><b>Roadkills 🏃🦞</b><span>Runners from other teams you pass on a leg. Tap the icon on a finished leg to log them. The count earns a Halo medal — Killing Spree at 5, Killing Frenzy at 10, Running Riot at 15, all the way up.</span></div>
+  </div>
+  <div class="dlg-actions"><button class="ghost" id="helpClose" style="flex:1">Close</button></div>
 </dialog>
 
 <script>
@@ -747,6 +791,14 @@ function fmtDur(ms){
                      : m + ':' + String(sec).padStart(2,'0');
   return (neg ? '-' : '') + core;
 }
+// Pre-race countdown. Under a day it ticks H:MM:SS; further out it collapses to
+// days + hours so the top bar never has to render "T−208:51:14".
+function fmtCountdown(ms){
+  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor((s%86400)/3600),
+        m = Math.floor((s%3600)/60), sec = s%60;
+  if (d > 0) return d + 'd ' + h + 'h';
+  return h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
 function fmtDelta(ms){
   const a = Math.abs(ms);
   if (a < 30000) return { txt:'on plan', cls:'' };
@@ -758,9 +810,6 @@ function fmtDelta(ms){
 }
 // Runner fleeing lobster — the team's roadkill mark. Never a headstone.
 const CHASE = '\u{1F3C3}\u{1F99E}';
-// Stat cells are a third of the card wide; "Sat 12:15 AM" only fits if the
-// weekday rides smaller than the time. Overnight legs make this the norm.
-const statT = d => (dayTag(d) ? '<span class="day">' + dayTag(d).trim() + '</span>' : '') + fmtT(d);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const vanSpan = v => '<span class="v' + v + '">Van ' + v + '</span>';
 
@@ -865,8 +914,8 @@ function openDlg(mode){
     const s = effStart();
     dlgRef = s || new Date();
     $('dlgTitle').textContent = 'Race start';
-    $('dlgSub').textContent = 'Gun time at Timberline · times are Pacific';
-    $('dlgInfo').innerHTML = infoRow('Planned gun time', df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED)) +
+    $('dlgSub').textContent = 'The race start at Timberline · times are Pacific';
+    $('dlgInfo').innerHTML = infoRow('Planned start', df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED)) +
       (s ? infoRow('Recorded', dayTag(s) + fmtTS(s)) : '');
     $('dlgLock').hidden = true;
     $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true; $('dlgKills').hidden = true;
@@ -921,7 +970,7 @@ function openDlg(mode){
       $('dlgClear').style.display = end ? '' : 'none'; disarmClear();
       $('dlgSave').textContent = end ? 'Confirm new time' : 'Confirm finish';
       $('dlgKills').hidden = true; // kills live behind the chase button on the row now
-      if (isCurrent && !end) $('dlgSub').innerHTML = vanSpan(L.van) + ' · on the road now · the big button is the fast path';
+      if (isCurrent && !end) $('dlgSub').innerHTML = vanSpan(L.van) + ' · on the road now · use the big button to log the finish';
     }
   }
   dlg.showModal();
@@ -1157,11 +1206,17 @@ async function sync(){
 window.addEventListener('online', () => { failStreak = 0; sync(); });
 window.addEventListener('offline', render);
 $('retryBtn').addEventListener('click', () => { failStreak = 0; sync(); });
+$('refreshBtn').addEventListener('click', () => { failStreak = 0; sync(); });
+
+/* ================= help / glossary ================= */
+$('helpItem').addEventListener('click', () => {
+  setHistory(false);
+  $('helpDlg').showModal();
+  if ($('helpDlg').focus) $('helpDlg').focus();
+});
+$('helpClose').addEventListener('click', () => $('helpDlg').close());
 
 /* ================= Rendering ================= */
-// The bar shows where the relay lands, not how far off plan it is; the delta
-// is one tap away rather than a number you stare at all race.
-let showDelta = false;
 function render(){
   const now = new Date();
   const started = !!effStart();
@@ -1169,32 +1224,12 @@ function render(){
   const proj = projections();
   const nextLeg = cur && cur.leg < 36 ? LEGS[cur.leg] : null;
 
-  // One relay chain: the offset banked at the last handoff is what every
-  // remaining leg inherits, so this is a race number, not a runner number.
-  const teamOff = cur ? proj[cur.leg] - cur.predEnd
-                      : (actualEnd(36) ? actualEnd(36) - LEGS[35].predEnd : null);
-  const seaside = actualEnd(36) || proj[36];
-  if (showDelta && started && teamOff != null){
-    const td = fmtDelta(teamOff);
-    $('finishLbl').textContent = 'Vs planned';
-    $('finishVal').textContent = td.txt;
-    $('finishChip').className = 'tstat ' + td.cls;
-  } else if (showDelta){
-    $('finishLbl').textContent = 'Vs planned';
-    $('finishVal').textContent = 'not started';
-    $('finishChip').className = 'tstat';
-  } else {
-    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned fin';
-    $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
-    $('finishChip').className = 'tstat';
-  }
-
   if (started){
     $('clockLbl').textContent = cur ? 'Elapsed' : 'Final';
     $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
   } else {
-    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until gun' : 'Ready';
-    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : '--:--:--';
+    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until start' : 'Ready';
+    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtCountdown(RACE_PLANNED - now) : '--:--:--';
   }
 
   if (!cur){
@@ -1202,36 +1237,35 @@ function render(){
     $('nowState').textContent = 'Race complete';
     $('nowRunner').textContent = 'Seaside 🎉';
     const fin = actualEnd(36), st = effStart();
-    $('nowElapsedLbl').textContent = 'Total time';
-    $('nowProjLbl').textContent = 'Crossed';
-    $('nowPlanLbl').textContent = 'Planned';
-    $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
-    $('nowProj').innerHTML = fin ? statT(fin) : '—';
-    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
-    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust gun time</button>';
+    $('nowElapsedLbl').textContent = 'Start';
+    $('nowProjLbl').textContent = 'Finish';
+    $('nowPlanLbl').textContent = 'Total';
+    $('nowElapsed').textContent = st ? fmtT(st) : '—';
+    $('nowProj').textContent = fin ? fmtT(fin) : '—';
+    $('nowPlan').textContent = fin && st ? fmtDur(fin - st) : '—';
+    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust race start</button>';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
     $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
     $('nowState').innerHTML = started ? 'On the road · ' + vanSpan(cur.van) : 'Pre-race';
     $('nowRunner').textContent = dnn(cur);
     if (started && s){
-      $('nowElapsedLbl').textContent = 'On leg';
+      // Same fields and words as the active runner's tile: start, ETA, elapsed.
+      $('nowElapsedLbl').textContent = 'Start';
       $('nowProjLbl').textContent = 'ETA';
-      $('nowPlanLbl').textContent = 'Planned fin';
-      $('nowElapsed').textContent = fmtDur(now - s);
-      $('nowProj').innerHTML = statT(proj[cur.leg]);
-      $('nowPlan').innerHTML = statT(cur.predEnd);
-      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) +
-        ' · leg plan ' + fmtDur(cur.predDur) +
-        '</span><button id="adjStart">Adjust gun time</button>';
+      $('nowPlanLbl').textContent = 'On leg';
+      $('nowElapsed').textContent = fmtT(s);
+      $('nowProj').textContent = fmtT(proj[cur.leg]);
+      $('nowPlan').textContent = fmtDur(now - s);
+      $('nowSub').innerHTML = '<span></span><button id="adjStart">Adjust race start</button>';
     } else {
-      $('nowElapsedLbl').textContent = 'Gun time';
-      $('nowProjLbl').textContent = 'Leg plan';
-      $('nowPlanLbl').textContent = 'Planned fin';
+      $('nowElapsedLbl').textContent = 'Start';
+      $('nowProjLbl').textContent = 'ETA';
+      $('nowPlanLbl').textContent = 'Leg time';
       $('nowElapsed').textContent = fmtT(RACE_PLANNED);
-      $('nowProj').textContent = fmtDur(cur.predDur);
-      $('nowPlan').innerHTML = statT(cur.predEnd);
-      $('nowSub').textContent = 'Planned gun time: ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' wave at Timberline.';
+      $('nowProj').textContent = fmtT(cur.predEnd);
+      $('nowPlan').textContent = fmtDur(cur.predDur);
+      $('nowSub').textContent = 'Race starts ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' at Timberline.';
     }
   }
 
@@ -1247,7 +1281,7 @@ function render(){
     stripWho.textContent = dnn(cur);
     stripMeta.innerHTML = started && hs
       ? fmtDur(now - hs) + '<span class="sep">·</span>ETA ' + dayTag(proj[cur.leg]) + fmtT(proj[cur.leg])
-      : 'gun ' + fmtT(RACE_PLANNED);
+      : 'starts ' + fmtT(RACE_PLANNED);
   }
 
   const hasDraft = !!draft;
@@ -1257,7 +1291,7 @@ function render(){
     const when = new Date(draft.whenISO);
     if (draft.kind === 'start'){
       $('confirmKind').textContent = 'Confirm race start';
-      $('confirmWho').textContent = 'Gun time — Timberline Lodge';
+      $('confirmWho').textContent = 'Race start — Timberline Lodge';
     } else {
       const L = LEGS[draft.leg - 1];
       const N = draft.leg < 36 ? LEGS[draft.leg] : null;
@@ -1277,7 +1311,7 @@ function render(){
     $('plunger').disabled = false;
     $('plunger').classList.add('startmode');
     $('plungerLabel').textContent = '🏁 Start race';
-    $('plungerSub').textContent = 'press at the gun — time stamps instantly';
+    $('plungerSub').textContent = 'press when the race starts — records the exact time';
   } else if (cur){
     $('plunger').disabled = false;
     $('plunger').classList.remove('startmode');
@@ -1285,7 +1319,7 @@ function render(){
       const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
       $('plungerLabel').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner);
       $('plungerSub').textContent = swapEx
-        ? 'press at the van swap — ' + swapEx.name
+        ? 'press at the exchange — ' + swapEx.name
         : 'press the moment ' + dn(cur.runner) + ' crosses';
     } else {
       $('plungerLabel').textContent = dn(cur.runner) + ' → finish line';
@@ -1400,18 +1434,20 @@ function render(){
   ).join('') : '<div class="histrow local"><span class="ic">·</span><span class="lbl">No changes yet</span><span></span></div>';
 
   // pill + footer
+  // The bar only carries the colored dot (cls); the words live in this menu.
   const n = queue.length;
-  let cls = '', badge = '', text = '';
-  if (!CONFIG.SCRIPT_URL){ badge = 'local'; text = 'Local only — no sheet URL'; }
-  else if (!navigator.onLine){ cls = 'offline'; badge = n ? 'Offline · ' + n : 'Offline';
+  let cls = '', text = '';
+  if (!CONFIG.SCRIPT_URL){ cls = 'local'; text = 'Local only — no sheet URL'; }
+  else if (!navigator.onLine){ cls = 'offline';
     text = n ? 'Offline · ' + n + ' queued' : 'Offline'; }
-  else if (lastErr){ cls = 'error'; badge = n ? n + ' failed' : 'Retry'; text = n ? n + ' not logged — tap' : 'Sync error — tap'; }
-  else if (n || syncing){ cls = 'pending'; badge = n ? n + ' sending' : 'Sending'; text = (n || '') + ' syncing…'; }
-  else { cls = 'live'; badge = ''; text = 'Live · synced'; }
+  else if (lastErr){ cls = 'error'; text = n ? n + ' not saved — tap' : 'Sync error — tap'; }
+  else if (n || syncing){ cls = 'pending'; text = (n ? n + ' ' : '') + 'saving…'; }
+  else { cls = 'live'; text = 'Live · synced'; }
   $('syncPill').className = cls;
-  $('syncBadge').textContent = badge;
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
+  $('refreshBtn').classList.toggle('spin', syncing);
+  $('retryBtn').classList.toggle('spin', syncing);
   // Age, not a timestamp — on a 30-hour race "6:20:37 PM" says nothing about staleness.
   if (lastSyncAt){
     const age = Date.now() - lastSyncAt;
@@ -1421,7 +1457,6 @@ function render(){
     $('lastSync').className = 'mono' + (age > 300000 ? ' stale' : '');
   } else { $('lastSync').textContent = 'never'; $('lastSync').className = 'mono stale'; }
   $('retryBtn').disabled = !navigator.onLine;
-  $('retryBtn').textContent = navigator.onLine ? 'Sync now' : 'Offline';
 }
 
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
@@ -1432,7 +1467,6 @@ function setHistory(open){
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-$('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
 $('scrim').addEventListener('click', (ev) => {
   ev.preventDefault();
   ev.stopPropagation();

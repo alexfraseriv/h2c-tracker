@@ -243,7 +243,7 @@ console.log('— S3 · Response dropped after server applied (the classic) —')
 A.net.mode = 'drop-response';
 await A.press('plunger'); await A.confirm();                       // leg 6 — server applies, response dies
 check('server DID apply leg 6', trackerCell(W, 6, 22) === true);
-check('client thinks it failed, op still queued', A.queue().length === 1 && /not logged/.test(A.text('syncText')), A.text('syncText'));
+check('client thinks it failed, op still queued', A.queue().length === 1 && /not saved/.test(A.text("syncText")), A.text('syncText'));
 A.net.mode = 'ok';
 const backoff1 = await A.fireTimeout(t => t.ms >= 10000);          // the scheduled retry
 check('retry scheduled at 10s backoff', backoff1 === 10000, backoff1);
