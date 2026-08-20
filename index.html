@@ -179,11 +179,14 @@
   .sp-top .dot.pending{background:var(--accent)}
   .sp-top .dot.offline,.sp-top .dot.error{background:var(--bad)}
   #syncText{font-weight:700;font-size:var(--t-base);flex:1;min-width:0}
-  #retryBtn{color:var(--accent);font-weight:700;font-size:var(--t-md);border:1px solid var(--line);
-    border-radius:var(--r-sm);padding:0 var(--s3);height:40px;flex:none;background:var(--panel-2)}
+  #retryBtn{width:40px;height:40px;flex:none;border-radius:var(--r-pill);
+    border:1px solid var(--line);background:var(--panel);color:var(--dim);
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
+  #retryBtn:active{background:var(--panel-2);color:var(--ink)}
+  #retryBtn.spin{animation:spin .9s linear infinite}
+  #retryBtn:disabled{color:var(--faint);opacity:.6}
   .sp-meta{font-size:var(--t-sm);color:var(--faint);margin-bottom:var(--s3)}
   .sp-meta .stale{color:var(--bad)}
-  #retryBtn:disabled{color:var(--faint);opacity:.6}
   #histErr{display:none;margin:var(--s2) 0;padding:10px var(--s3);border-radius:var(--r-md);font-size:var(--t-md);
     color:var(--bad);border:1px solid color-mix(in srgb, var(--bad) 40%, var(--line));
     background:color-mix(in srgb, var(--bad) 8%, transparent)}
@@ -485,7 +488,7 @@
       <div class="sp-top">
         <span class="dot" id="syncDot"></span>
         <span id="syncText">Starting…</span>
-        <button id="retryBtn">Sync now</button>
+        <button id="retryBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
       </div>
       <div class="sp-meta">Sheet last read <span class="mono" id="lastSync">never</span></div>
       <div id="histErr"></div>
@@ -1470,6 +1473,7 @@ function render(){
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
   $('refreshBtn').classList.toggle('spin', syncing);
+  $('retryBtn').classList.toggle('spin', syncing);
   // Age, not a timestamp — on a 30-hour race "6:20:37 PM" says nothing about staleness.
   if (lastSyncAt){
     const age = Date.now() - lastSyncAt;
@@ -1479,7 +1483,6 @@ function render(){
     $('lastSync').className = 'mono' + (age > 300000 ? ' stale' : '');
   } else { $('lastSync').textContent = 'never'; $('lastSync').className = 'mono stale'; }
   $('retryBtn').disabled = !navigator.onLine;
-  $('retryBtn').textContent = navigator.onLine ? 'Sync now' : 'Offline';
 }
 
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
