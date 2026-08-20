@@ -294,7 +294,11 @@
   #plunger::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
     background:repeating-linear-gradient(-45deg,#1a1503 0 8px,transparent 8px 16px);opacity:.25}
   #plunger:active{transform:translateY(5px);box-shadow:0 2px 0 var(--accent-deep), 0 6px 14px -10px rgba(0,0,0,.4)}
-  #plunger small{font-size:var(--t-sm);font-weight:600;opacity:.72;font-family:var(--mono)}
+  #plunger small{font-size:var(--t-sm);font-weight:600;opacity:.72;font-family:var(--mono);
+    display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+  /* The runner handoff is the thing you read at speed — give it real size. */
+  #plunger small .names{font-size:var(--t-lg);font-weight:800;opacity:1;letter-spacing:-.01em}
+  #plunger small .exloc{font-size:var(--t-xs);font-weight:600;opacity:.8}
   #plunger:disabled{background:var(--panel-2);color:var(--faint);box-shadow:none;transform:none;border:1px solid var(--line)}
   #plunger:disabled::after{display:none}
   #plunger.startmode{background:var(--good-fill);color:var(--good-ink);
@@ -1538,11 +1542,12 @@ function render(){
       const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
       // Van-to-van swaps are the "major exchanges"; a plain leg change is not.
       $('plungerLabel').textContent = swapEx ? 'Record major exchange handoff' : 'Record handoff';
-      $('plungerSub').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner) +
-        (swapEx ? ' · ' + swapEx.name : '');
+      $('plungerSub').innerHTML = '<span class="names">' + esc(dn(cur.runner)) + ' → ' + esc(dn(nextLeg.runner)) + '</span>' +
+        (swapEx ? '<span class="exloc">' + esc(swapEx.name) + '</span>' : '');
     } else {
       $('plungerLabel').textContent = 'Record finish';
-      $('plungerSub').textContent = dn(cur.runner) + ' → finish line · Seaside';
+      $('plungerSub').innerHTML = '<span class="names">' + esc(dn(cur.runner)) + ' → finish line</span>' +
+        '<span class="exloc">Seaside</span>';
     }
   } else {
     $('plunger').disabled = true;
