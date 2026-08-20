@@ -88,27 +88,17 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;gap:var(--s4);min-width:0;flex:1;overflow:hidden}
-  /* Every clock on screen says what it is. The elapsed clock keeps its full width;
-     the finish column yields (and clips as a last resort on tiny screens) so a long
-     clock can never bleed over the finish or slide under the buttons. */
-  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
-  .ident > .tstat:last-child{flex:0 1 auto;min-width:0}
-  .ident > .tstat:last-child .mono{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ident{display:flex;align-items:center;min-width:0;flex:1;overflow:hidden}
   .topbar > div:last-child{flex:none}
+  /* The race clock says what it is. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
-  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
-    font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
-  /* Where the whole relay reaches Seaside. One tap swaps it for the vs-planned
-     delta, and the label above changes with it so the number is never bare. */
-  #finishChip{flex:none}
-  #finishVal{font-size:var(--t-base);font-weight:700;color:var(--ink);line-height:1.1;
-    white-space:nowrap;border-bottom:1px dotted var(--faint);padding-bottom:1px}
-  #finishChip.ahead #finishVal{color:var(--good)}
-  #finishChip.behind #finishVal{color:var(--accent)}
+  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
+    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
 
-  /* collapsed sync indicator: a dot. It only grows a word when something is wrong. */
+  /* Sync status lives in the bar as a bare dot — green synced, yellow working,
+     red offline or errored. The words behind it are in the status menu. */
   #syncPill{position:relative;display:flex;align-items:center;gap:7px;height:40px;padding:0 12px;
     border-radius:var(--r-pill);border:1px solid var(--line);background:var(--panel);
     font-size:var(--t-sm);font-weight:600;color:var(--dim);white-space:nowrap;flex:none;
@@ -116,14 +106,13 @@
   #syncPill::after{content:'';position:absolute;inset:-5px;border-radius:inherit}
   #syncPill .dot{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none;
     box-shadow:0 0 0 0 currentColor}
-  #syncPill.live .dot{background:var(--good)}
+  #syncPill.live .dot{background:var(--good-fill)}
   .gearico{font-size:15px;line-height:1;opacity:.85}
-  #syncPill.pending .dot{background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+  #syncPill.pending .dot{background:var(--accent-fill);animation:pulse 1.4s ease-in-out infinite}
   #syncPill.offline .dot{background:var(--bad)}
-  #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line));color:var(--bad)}
+  #syncPill.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line))}
   #syncPill.error .dot{background:var(--bad)}
   #syncPill[aria-expanded="true"]{background:var(--panel-2)}
-  #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
   /* Refresh — pull the sheet now, left of the status/settings control. */
   #refreshBtn{width:40px;height:40px;flex:none;border-radius:var(--r-pill);
@@ -464,15 +453,11 @@
         <span class="tlabel" id="clockLbl">Elapsed</span>
         <span id="raceClock" class="mono">--:--:--</span>
       </div>
-      <button id="finishChip" class="tstat" aria-label="Projected finish — tap for vs planned">
-        <span class="tlabel" id="finishLbl">Finish</span>
-        <span class="mono" id="finishVal">--:--</span>
-      </button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
       <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
       <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
-        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span><span id="syncBadge"></span>
+        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span>
       </button>
     </div>
   </div>
@@ -632,8 +617,7 @@
 
     <div class="gsec">Top bar</div>
     <div class="gterm"><b>Elapsed · Until start</b><span>The big clock: counts down to the start, then counts up from it.</span></div>
-    <div class="gterm"><b>Finish</b><span>The projected time the whole relay reaches Seaside. Tap it to see how far ahead of or behind plan the team is.</span></div>
-    <div class="gterm"><b>The dot</b><span>Sync status. Green = everything's saved to the sheet. Amber = sending, or changes are queued. Red = offline. A number is how many changes are still waiting.</span></div>
+    <div class="gterm"><b>The dot</b><span>Sync status, at a glance. Green = everything's saved to the sheet. Amber = sending, or changes are waiting. Red = offline, or a problem. Tap it for the details and settings.</span></div>
     <div class="gterm"><b>↻ Refresh</b><span>Pulls the latest from the sheet right now, instead of waiting for the once-a-minute check.</span></div>
 
     <div class="gsec">Roadkills</div>
@@ -1233,35 +1217,12 @@ $('helpItem').addEventListener('click', () => {
 $('helpClose').addEventListener('click', () => $('helpDlg').close());
 
 /* ================= Rendering ================= */
-// The bar shows where the relay lands, not how far off plan it is; the delta
-// is one tap away rather than a number you stare at all race.
-let showDelta = false;
 function render(){
   const now = new Date();
   const started = !!effStart();
   const cur = currentLeg();
   const proj = projections();
   const nextLeg = cur && cur.leg < 36 ? LEGS[cur.leg] : null;
-
-  // One relay chain: the offset banked at the last handoff is what every
-  // remaining leg inherits, so this is a race number, not a runner number.
-  const teamOff = cur ? proj[cur.leg] - cur.predEnd
-                      : (actualEnd(36) ? actualEnd(36) - LEGS[35].predEnd : null);
-  const seaside = actualEnd(36) || proj[36];
-  if (showDelta && started && teamOff != null){
-    const td = fmtDelta(teamOff);
-    $('finishLbl').textContent = 'Vs planned';
-    $('finishVal').textContent = td.txt;
-    $('finishChip').className = 'tstat ' + td.cls;
-  } else if (showDelta){
-    $('finishLbl').textContent = 'Vs planned';
-    $('finishVal').textContent = 'not started';
-    $('finishChip').className = 'tstat';
-  } else {
-    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned';
-    $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
-    $('finishChip').className = 'tstat';
-  }
 
   if (started){
     $('clockLbl').textContent = cur ? 'Elapsed' : 'Final';
@@ -1473,16 +1434,16 @@ function render(){
   ).join('') : '<div class="histrow local"><span class="ic">·</span><span class="lbl">No changes yet</span><span></span></div>';
 
   // pill + footer
+  // The bar only carries the colored dot (cls); the words live in this menu.
   const n = queue.length;
-  let cls = '', badge = '', text = '';
-  if (!CONFIG.SCRIPT_URL){ badge = 'local'; text = 'Local only — no sheet URL'; }
-  else if (!navigator.onLine){ cls = 'offline'; badge = n ? 'Offline · ' + n : 'Offline';
+  let cls = '', text = '';
+  if (!CONFIG.SCRIPT_URL){ cls = 'local'; text = 'Local only — no sheet URL'; }
+  else if (!navigator.onLine){ cls = 'offline';
     text = n ? 'Offline · ' + n + ' queued' : 'Offline'; }
-  else if (lastErr){ cls = 'error'; badge = n ? n + ' failed' : 'Retry'; text = n ? n + ' not saved — tap' : 'Sync error — tap'; }
-  else if (n || syncing){ cls = 'pending'; badge = n ? n + ' sending' : 'Sending'; text = (n ? n + ' ' : '') + 'saving…'; }
-  else { cls = 'live'; badge = ''; text = 'Live · synced'; }
+  else if (lastErr){ cls = 'error'; text = n ? n + ' not saved — tap' : 'Sync error — tap'; }
+  else if (n || syncing){ cls = 'pending'; text = (n ? n + ' ' : '') + 'saving…'; }
+  else { cls = 'live'; text = 'Live · synced'; }
   $('syncPill').className = cls;
-  $('syncBadge').textContent = badge;
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
   $('refreshBtn').classList.toggle('spin', syncing);
@@ -1506,7 +1467,6 @@ function setHistory(open){
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
-$('finishChip').addEventListener('click', () => { showDelta = !showDelta; render(); });
 $('scrim').addEventListener('click', (ev) => {
   ev.preventDefault();
   ev.stopPropagation();
