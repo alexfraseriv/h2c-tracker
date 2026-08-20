@@ -1,5 +1,5 @@
 // H2C Tracker — offline shell cache. Bump the version to force an update.
-const CACHE = 'h2c-v27';
+const CACHE = 'h2c-v28';
 const SHELL = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {
