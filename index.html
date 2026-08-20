@@ -88,14 +88,22 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;min-width:0;flex:1;overflow:hidden}
+  .ident{display:flex;align-items:center;gap:var(--s3);min-width:0;flex:1;overflow:hidden}
   .topbar > div:last-child{flex:none}
-  /* The race clock says what it is. */
-  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+  /* The race clock says what it is; it keeps its width. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
+  /* Legs done + total roadkills ride alongside the clock; they yield (and clip)
+     before the clock does when the bar gets tight. */
+  .barstats{display:flex;flex-direction:column;justify-content:center;gap:3px;
+    flex:0 1 auto;min-width:0;overflow:hidden;
+    padding-left:var(--s3);border-left:1px solid var(--line)}
+  .bstat{font-size:var(--t-xs);color:var(--dim);white-space:nowrap;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .bstat b{color:var(--ink);font-weight:800;font-family:var(--mono);font-size:var(--t-sm)}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
-  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
-    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
+  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
+    font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
 
   /* Sync status lives in the bar as a bare dot — green synced, yellow working,
      red offline or errored. The words behind it are in the status menu. */
@@ -461,6 +469,10 @@
       <div class="tstat">
         <span class="tlabel" id="clockLbl">Elapsed</span>
         <span id="raceClock" class="mono">--:--:--</span>
+      </div>
+      <div class="barstats">
+        <span class="bstat" id="legsStat"><b>0/36</b> legs</span>
+        <span class="bstat" id="killsStat"><b>0</b> 🏃🦞</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
@@ -1364,6 +1376,11 @@ function render(){
   let totalKills = 0, v1Kills = 0, v2Kills = 0;
   for (const L of LEGS){ const k = killsFor(L.leg) || 0; totalKills += k; if (L.van === 1) v1Kills += k; else v2Kills += k; }
   $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' total · <span class="v1">' + v1Kills + ' V1</span> · <span class="v2">' + v2Kills + ' V2</span>' : '';
+
+  // top-bar mini stats: legs done + total roadkills, beside the clock
+  const legsDone = LEGS.length - legsLeft;
+  $('legsStat').innerHTML = '<b>' + legsDone + '/' + LEGS.length + '</b> legs';
+  $('killsStat').innerHTML = '<b>' + totalKills + '</b> ' + CHASE;
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
