@@ -199,12 +199,14 @@
     background:color-mix(in srgb, var(--accent) 10%, transparent);
     border-radius:var(--r-sm);padding:4px 8px;letter-spacing:.04em;flex:none}
   #nowRunner{font-size:var(--t-3xl);font-weight:800;letter-spacing:-.02em;line-height:1.08;margin-bottom:var(--s4)}
-  .bib-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);
+  /* Three stats spread across the width, label over value, left-aligned —
+     the same shape as the top bar's ELAPSED / FINISH pair. */
+  .bib-grid{display:flex;justify-content:space-between;gap:var(--s4);
     border-top:1px solid var(--line-soft);padding-top:var(--s3)}
+  .bib-grid .stat{min-width:0}
   .stat .eyebrow{margin-bottom:var(--s1);font-size:var(--t-2xs)}
   .stat b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
     font-weight:700;letter-spacing:-.01em;white-space:nowrap}
-  .stat b .day{font-size:var(--t-xs);color:var(--dim);margin-right:4px}
   #nowDelta.ahead{color:var(--good)} #nowDelta.behind{color:var(--accent)}
   #nowSub{margin-top:var(--s3);font-size:var(--t-md);color:var(--dim);
     border-top:1px solid var(--line-soft);padding-top:var(--s3);
@@ -758,9 +760,6 @@ function fmtDelta(ms){
 }
 // Runner fleeing lobster — the team's roadkill mark. Never a headstone.
 const CHASE = '\u{1F3C3}\u{1F99E}';
-// Stat cells are a third of the card wide; "Sat 12:15 AM" only fits if the
-// weekday rides smaller than the time. Overnight legs make this the norm.
-const statT = d => (dayTag(d) ? '<span class="day">' + dayTag(d).trim() + '</span>' : '') + fmtT(d);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const vanSpan = v => '<span class="v' + v + '">Van ' + v + '</span>';
 
@@ -1206,7 +1205,7 @@ function render(){
     $('nowProjLbl').textContent = 'Crossed';
     $('nowPlanLbl').textContent = 'Planned';
     $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
-    $('nowProj').innerHTML = fin ? statT(fin) : '—';
+    $('nowProj').textContent = fin ? fmtT(fin) : '—';
     $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
     $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust gun time</button>';
   } else {
@@ -1217,21 +1216,20 @@ function render(){
     if (started && s){
       $('nowElapsedLbl').textContent = 'On leg';
       $('nowProjLbl').textContent = 'ETA';
-      $('nowPlanLbl').textContent = 'Planned fin';
+      $('nowPlanLbl').textContent = 'Planned';
       $('nowElapsed').textContent = fmtDur(now - s);
-      $('nowProj').innerHTML = statT(proj[cur.leg]);
-      $('nowPlan').innerHTML = statT(cur.predEnd);
-      $('nowSub').innerHTML = '<span>Handoff ' + dayTag(s) + fmtTS(s) +
-        ' · leg plan ' + fmtDur(cur.predDur) +
+      $('nowProj').textContent = fmtT(proj[cur.leg]);
+      $('nowPlan').textContent = fmtT(cur.predEnd);
+      $('nowSub').innerHTML = '<span>Took the handoff at ' + fmtT(s) +
         '</span><button id="adjStart">Adjust gun time</button>';
     } else {
-      $('nowElapsedLbl').textContent = 'Gun time';
+      $('nowElapsedLbl').textContent = 'Gun';
       $('nowProjLbl').textContent = 'Leg plan';
-      $('nowPlanLbl').textContent = 'Planned fin';
+      $('nowPlanLbl').textContent = 'Planned';
       $('nowElapsed').textContent = fmtT(RACE_PLANNED);
       $('nowProj').textContent = fmtDur(cur.predDur);
-      $('nowPlan').innerHTML = statT(cur.predEnd);
-      $('nowSub').textContent = 'Planned gun time: ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' wave at Timberline.';
+      $('nowPlan').textContent = fmtT(cur.predEnd);
+      $('nowSub').textContent = 'Gun scheduled ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' at Timberline.';
     }
   }
 
