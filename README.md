@@ -44,7 +44,7 @@ Phone (index.html, PWA)            Google Apps Script             Team Sheet
 
 **Stage 0a (no deploy needed): `node test/gauntlet.mjs`** — the adversarial suite: boots the full client headless against the sheet replica with a chaos network. Covers dead-zone batching, dropped responses after server apply, captive portals + backoff caps, mid-flight edits, dueling phones (LWW convergence), poisoned queues, private browsing, login-page deploys, 30s hung-request timeouts, hostile sheet edits (XSS names, inserted rows, renamed headers), clock skew, malformed state, and perf (model tick ~57µs, full render ~0.7ms, storage ~5KB).
 
-**Stage 0b (no deploy needed): `node test/local-e2e.mjs`** — runs the real Code.gs against a replica of the live sheet (structure captured 8/17). Verifies layout detection, checkbox gating, writes/clears/kills, cache invalidation, and that the baked schedule in index.html still matches the sheet. All 26 checks green as shipped.
+**Stage 0b (no deploy needed): `node test/local-e2e.mjs`** — runs the real Code.gs against a replica of the live sheet (structure captured 8/17). Verifies layout detection, checkbox gating, writes/clears/kills, cache invalidation, the automatic backups + restore, and that the baked schedule in index.html still matches the sheet. All 33 checks green as shipped.
 
 **Note on the Finish? checkbox:** the live sheet already has stale values sitting in "End Time (EDIT THESE CELLS)". A leg only counts as finished when "Finish? (CHECK)" is TRUE — same rule the sheet's own delta math uses. The app ticks/unticks the box automatically; anyone hand-typing a time directly in the sheet must also tick the box. (no teammates required)
 
@@ -57,3 +57,15 @@ Phone (index.html, PWA)            Google Apps Script             Team Sheet
 - Auth = the URL + team key. Anyone with both can write; the sheet itself is never exposed and the script runs under your account. Fine for 12 friends.
 - Conflict model is last-write-wins per leg, and the sheet's value always wins on disagreement — the history log tells the loser what happened.
 - If headers get renamed in the sheet, re-run `verifySetup()`; detection is by header text.
+
+### Backups & restore (owner safety net)
+
+Every save appends a full snapshot of the app-written state (end times, kills, race start) to a hidden **`App Backups`** tab. It is best-effort and wrapped so a backup failure can never block or fail a real save, and it only ever writes its own tab — the tracker tab and race plan are untouched. The most recent 250 snapshots are kept.
+
+To roll back, open **Extensions → Apps Script** on the team sheet and run one of:
+
+- `listBackups()` — logs the recent snapshot timestamps.
+- `restoreLatest()` — restores the newest snapshot.
+- `restoreBackup("2026-08-29T…Z")` — restores a specific snapshot by timestamp.
+
+Restore rewrites end times / kills / race start to match the snapshot (clearing anything recorded after it) using the same validated writes the app uses, so it can't corrupt the sheet either. It lives in the owner's Apps Script console on purpose — not as a shared button in the app — so no one can roll the race back by accident from a phone.

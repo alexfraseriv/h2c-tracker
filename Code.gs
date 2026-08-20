@@ -14,6 +14,13 @@
  *    (less radio time on phones).
  *  - Layout detection is cached for 10 min and state responses for 15 s
  *    (CacheService), so 12 phones polling doesn't re-scan the sheet each time.
+ *
+ * v3 changes:
+ *  - Every save snapshots the app-written state to a hidden "App Backups" tab
+ *    (best-effort; a backup failure never blocks a save). Owner can roll back
+ *    from the Apps Script editor: listBackups(), restoreLatest(), restoreBackup().
+ *    IMPORTANT: after pasting this file, re-deploy the web app (Deploy → Manage
+ *    deployments → edit → Version: New) so the running URL picks up the change.
  */
 
 const CONFIG = {
@@ -32,6 +39,8 @@ const CONFIG = {
   },
   LEG_COUNT: 36,
   KILLS_SHEET: 'App Kills',           // created automatically; tracker tab is never touched
+  BACKUP_SHEET: 'App Backups',        // created automatically & hidden; snapshot history
+  BACKUP_MAX: 250,                    // keep the most recent N snapshots, trim older
   STATE_CACHE_SEC: 15,
   LAYOUT_CACHE_SEC: 600,
 };
@@ -75,7 +84,9 @@ function doPost(e) {
       CacheService.getScriptCache().remove('state');
       lock.releaseLock();
     }
-    return { ok: true, state: getState_(true) };
+    const fresh = getState_(true);
+    backupState_(fresh);            // best-effort snapshot; never blocks the save
+    return { ok: true, state: fresh };
   });
 }
 
@@ -252,6 +263,95 @@ function readKills_() {
   const map = {};
   vals.forEach((r) => { if (r[0]) map[r[0]] = Number(r[1]) || 0; });
   return map;
+}
+
+/* ------------------------------------------------------------- backups */
+/*
+ * Every save appends a full snapshot of the app-written state (end times, kills,
+ * race start) to a hidden "App Backups" tab. It is a safety net, not part of the
+ * app's data path: it is best-effort and wrapped so a backup failure can NEVER
+ * block or fail a real save, and it only ever writes its own tab.
+ *
+ * To roll back (owner only, from Extensions -> Apps Script):
+ *   listBackups()                     - log the recent snapshot timestamps
+ *   restoreLatest()                   - restore the newest snapshot
+ *   restoreBackup('2026-08-29T...Z')  - restore a specific snapshot by timestamp
+ * Restore rewrites end times / kills / race start to match the snapshot (clearing
+ * anything newer) using the same validated writes the app uses, so it cannot
+ * corrupt the sheet either.
+ */
+function backupState_(state) {
+  try {
+    const ss = ss_();
+    let sh = ss.getSheetByName(CONFIG.BACKUP_SHEET);
+    if (!sh) {
+      sh = ss.insertSheet(CONFIG.BACKUP_SHEET);
+      sh.getRange(1, 1, 1, 2).setValues([['When (UTC)', 'Snapshot JSON']]);
+      sh.setFrozenRows(1);
+      if (sh.hideSheet) sh.hideSheet();
+    }
+    const snap = { ends: {}, kills: state.kills || {}, raceStart: state.raceStartActual || null };
+    (state.legs || []).forEach((l) => { if (l.actEnd) snap.ends[l.leg] = l.actEnd; });
+    sh.appendRow([new Date().toISOString(), JSON.stringify(snap)]);
+    const extra = sh.getLastRow() - 1 - CONFIG.BACKUP_MAX;   // rows beyond header + cap
+    if (extra > 0) sh.deleteRows(2, extra);
+  } catch (err) {
+    Logger.log('backup skipped (non-fatal): ' + (err && err.message ? err.message : err));
+  }
+}
+
+function listBackups() {
+  const sh = ss_().getSheetByName(CONFIG.BACKUP_SHEET);
+  if (!sh || sh.getLastRow() < 2) { Logger.log('No backups yet.'); return; }
+  const n = sh.getLastRow();
+  const start = Math.max(2, n - 24);
+  const rows = sh.getRange(start, 1, n - start + 1, 1).getValues();
+  Logger.log('Recent backups (newest last):');
+  rows.forEach((r) => Logger.log('  ' + r[0]));
+  Logger.log('Restore with restoreBackup("<timestamp>") or restoreLatest().');
+}
+
+function restoreLatest() {
+  const sh = ss_().getSheetByName(CONFIG.BACKUP_SHEET);
+  if (!sh || sh.getLastRow() < 2) throw new Error('No backups to restore');
+  const row = sh.getRange(sh.getLastRow(), 1, 1, 2).getValues()[0];
+  restoreSnapshot_(row[1]);
+  Logger.log('Restored the snapshot from ' + row[0]);
+}
+
+function restoreBackup(whenISO) {
+  const sh = ss_().getSheetByName(CONFIG.BACKUP_SHEET);
+  if (!sh || sh.getLastRow() < 2) throw new Error('No backups to restore');
+  const vals = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  for (let i = vals.length - 1; i >= 0; i--) {
+    if (String(vals[i][0]) === String(whenISO)) { restoreSnapshot_(vals[i][1]); Logger.log('Restored ' + whenISO); return; }
+  }
+  throw new Error('No backup with timestamp ' + whenISO + ' (run listBackups() to see valid ones)');
+}
+
+function restoreSnapshot_(json) {
+  const snap = JSON.parse(json);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    for (let leg = 1; leg <= CONFIG.LEG_COUNT; leg++) {
+      const iso = snap.ends && snap.ends[leg];
+      if (iso) recordLeg_(leg, iso); else clearLeg_(leg);
+    }
+    for (let leg = 1; leg <= CONFIG.LEG_COUNT; leg++) {
+      setKills_(leg, (snap.kills && snap.kills[leg]) ? Number(snap.kills[leg]) : 0);
+    }
+    if (snap.raceStart) {
+      const d = new Date(snap.raceStart);
+      if (!isNaN(d.getTime())) PropertiesService.getScriptProperties().setProperty('RACE_START_ACTUAL', d.toISOString());
+    } else {
+      PropertiesService.getScriptProperties().deleteProperty('RACE_START_ACTUAL');
+    }
+    SpreadsheetApp.flush();
+  } finally {
+    CacheService.getScriptCache().remove('state');
+    lock.releaseLock();
+  }
 }
 
 /* ------------------------------------------------------------- helpers */

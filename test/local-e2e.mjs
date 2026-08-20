@@ -114,6 +114,10 @@ function mkSheet(name, grid){
       return null;
     },
   });
+  sheet.getLastRow = () => grid.length;
+  sheet.appendRow = (arr) => { grid.push(arr.slice()); return sheet; };
+  sheet.deleteRows = (start, num) => { grid.splice(start - 1, num); return sheet; };
+  sheet.hideSheet = () => sheet;
   return sheet;
 }
 function mkWorld(){
@@ -154,7 +158,7 @@ function mkWorld(){
 const src = readFileSync(join(here, '..', 'Code.gs'), 'utf8');
 const { ss, env } = mkWorld();
 const gas = new Function(...Object.keys(env),
-  src + '\n;return { doGet, doPost, verifySetup, smokeTest };')(...Object.values(env));
+  src + '\n;return { doGet, doPost, verifySetup, smokeTest, backupState_, restoreLatest, restoreBackup };')(...Object.values(env));
 
 const KEY = 'seaside-or-bust-2026';
 const GET = (key = KEY) => JSON.parse(gas.doGet({ parameter: { key } }).content);
@@ -221,6 +225,26 @@ r = GET();
 check('earlier record in failed batch did apply (client retry is idempotent, so safe)',
   r.state.legs[3].actEnd === '2026-08-28T23:00:00.000Z');
 check('doPost without key rejected', POST({ key: 'nope', records: [] }).ok === false);
+
+console.log('— Backup + restore safety net —');
+// Every save snapshots the app-written state to a hidden tab.
+POST({ records: [{ leg: 5, endTimeISO: '2026-08-29T01:00:00.000Z' }] });
+const bk = ss.getSheetByName('App Backups');
+check('backup tab created + populated by a save', !!bk && bk.getLastRow() >= 2);
+const latest = JSON.parse(bk.getRange(bk.getLastRow(), 1, 1, 2).getValues()[0][1]);
+check('snapshot captured the recorded end time', latest.ends['5'] === '2026-08-29T01:00:00.000Z');
+// Restore rewrites state to match a snapshot, using the same validated writes.
+gas.backupState_({ legs: [{ leg: 7, actEnd: '2026-08-29T02:22:00.000Z' }], kills: { 7: 4 }, raceStart: null });
+gas.restoreLatest();
+let rr = GET().state;
+check('restore applied the snapshot end time', rr.legs[6].actEnd === '2026-08-29T02:22:00.000Z');
+check('restore cleared legs not in the snapshot', rr.legs[0].actEnd === null && rr.legs[4].actEnd === null);
+check('restore applied the snapshot kills', ss.getSheetByName('App Kills').getRange(8, 2).getValue() === 4);
+// A broken backup must NEVER block a real save (this is the whole point).
+bk.appendRow = () => { throw new Error('simulated backup failure'); };
+const rbroke = POST({ records: [{ leg: 9, endTimeISO: '2026-08-29T03:03:00.000Z' }] });
+check('save still succeeds when the backup throws', rbroke.ok === true &&
+  rbroke.state.legs[8].actEnd === '2026-08-29T03:03:00.000Z');
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
