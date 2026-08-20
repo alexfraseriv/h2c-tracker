@@ -468,7 +468,7 @@
       </div>
       <div class="barstats">
         <span class="bstat" id="legsStat"><b>0/36</b> legs</span>
-        <span class="bstat" id="killsStat"><b>0</b> 🏃🦞</span>
+        <span class="bstat" id="killsStat"><b>0</b> 🦞</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
@@ -1374,7 +1374,9 @@ function render(){
   // top-bar mini stats: legs done + total roadkills, beside the clock
   const legsDone = LEGS.length - legsLeft;
   $('legsStat').innerHTML = '<b>' + legsDone + '/' + LEGS.length + '</b> legs';
-  $('killsStat').innerHTML = '<b>' + totalKills + '</b> ' + CHASE;
+  // Just the lobster in the cramped top bar; the runner+lobster mark stays on
+  // the roomier leg tiles and kill panel.
+  $('killsStat').innerHTML = '<b>' + totalKills + '</b> \u{1F99E}';
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
