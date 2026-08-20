@@ -120,6 +120,13 @@
   #syncPill[aria-expanded="true"]{background:var(--panel-2)}
   #syncBadge:empty{display:none}
   @keyframes pulse{50%{opacity:.35}}
+  /* Refresh — pull the sheet now, left of the status/settings control. */
+  #refreshBtn{width:40px;height:40px;flex:none;border-radius:var(--r-pill);
+    border:1px solid var(--line);background:var(--panel);color:var(--dim);
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
+  #refreshBtn:active{background:var(--panel-2);color:var(--ink)}
+  #refreshBtn.spin{animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   .sp-sec{margin:var(--s4) 0 var(--s1);padding-top:var(--s3);border-top:1px solid var(--line)}
   .setrow{width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
@@ -128,6 +135,15 @@
   .setrow:active{background:var(--panel-2)}
   .setval{font-family:var(--mono);font-size:var(--t-md);color:var(--dim);font-weight:700}
   .setrow[hidden]{display:none}
+  /* glossary */
+  .gloss{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s4)}
+  .gsec{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+    color:var(--faint);margin-top:var(--s2)}
+  .gsec:first-child{margin-top:0}
+  .gterm{display:flex;flex-direction:column;gap:2px}
+  .gterm b{font-size:var(--t-base);font-weight:700;color:var(--ink)}
+  .gterm>span{font-size:var(--t-md);color:var(--dim);line-height:1.45}
+  .gterm>span b{font-family:var(--mono);font-size:var(--t-sm);font-weight:700;color:var(--dim)}
 
 
   /* who is running right now — slides in once the bib card scrolls away */
@@ -446,6 +462,7 @@
       </button>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
+      <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
       <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
         <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span><span id="syncBadge"></span>
       </button>
@@ -476,6 +493,7 @@
       <div class="sp-sec"><span class="eyebrow">Settings</span></div>
       <button class="setrow" id="themeItem"><span>Theme</span><span id="themeVal" class="setval">auto</span></button>
       <button class="setrow" id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="setval">off</span></button>
+      <button class="setrow" id="helpItem"><span>Help &amp; glossary</span><span class="setval">?</span></button>
 
       <div class="sp-sec"><span class="eyebrow">Change history</span></div>
       <div id="histList"></div>
@@ -582,6 +600,37 @@
   <div class="dlg-actions" id="dlgCloseOnly" hidden>
     <button class="ghost" id="dlgClose2" style="flex:1">Close</button>
   </div>
+</dialog>
+
+<dialog id="helpDlg" tabindex="-1">
+  <h2>What the words mean</h2>
+  <div class="sub">Every term the tracker uses · all times are Pacific</div>
+  <div class="gloss">
+    <div class="gsec">Reading a runner</div>
+    <div class="gterm"><b>Leg</b><span>One of the 36 relay segments (<b>L1</b>–<b>L36</b>). Each person runs several.</span></div>
+    <div class="gterm"><b>Van 1 · Van 2</b><span>The two squads of six, shown in blue and purple. They leapfrog, one resting while the other runs.</span></div>
+    <div class="gterm"><b>Started</b><span>When the current runner's leg began — the moment they took the handoff.</span></div>
+    <div class="gterm"><b>On leg</b><span>How long the current runner has been out on this leg.</span></div>
+    <div class="gterm"><b>Pace</b><span>Minutes per mile for a leg.</span></div>
+    <div class="gterm"><b>Total time</b><span>How long a leg takes, start to finish.</span></div>
+
+    <div class="gsec">Times and the plan</div>
+    <div class="gterm"><b>ETA</b><span>The estimated finish time of a leg — when that runner reaches the next exchange. Re-figured from the times actually recorded so far, so it sharpens as the race runs.</span></div>
+    <div class="gterm"><b>Planned</b><span>The schedule from the team sheet — what was expected before anyone ran.</span></div>
+    <div class="gterm"><b>Est.</b><span>Marks a leg that hasn't run yet: its start and finish are estimates, not recorded times.</span></div>
+    <div class="gterm"><b>Exchange · handoff</b><span>Where one runner passes to the next (Sandy, OMSI, …). The van exchanges are where Van 1 and Van 2 trade off.</span></div>
+    <div class="gterm"><b>Adjust race start</b><span>Corrects the recorded starting-gun time. Every ETA re-bases from it, so only touch it if the gun time is wrong.</span></div>
+
+    <div class="gsec">Top bar</div>
+    <div class="gterm"><b>Elapsed · Until start</b><span>The big clock: counts down to the gun, then counts up from it.</span></div>
+    <div class="gterm"><b>Finish</b><span>The projected time the whole relay reaches Seaside. Tap it to see how far ahead of or behind plan the team is.</span></div>
+    <div class="gterm"><b>The dot</b><span>Sync status. Green = everything's saved to the sheet. Amber = sending, or changes are queued. Red = offline. A number is how many changes are still waiting.</span></div>
+    <div class="gterm"><b>↻ Refresh</b><span>Pulls the latest from the sheet right now, instead of waiting for the once-a-minute check.</span></div>
+
+    <div class="gsec">Roadkills</div>
+    <div class="gterm"><b>Roadkills 🏃🦞</b><span>Runners from other teams you pass on a leg. Tap the icon on a finished leg to log them. The count earns a Halo medal — Killing Spree at 5, Killing Frenzy at 10, Running Riot at 15, all the way up.</span></div>
+  </div>
+  <div class="dlg-actions"><button class="ghost" id="helpClose" style="flex:1">Close</button></div>
 </dialog>
 
 <script>
@@ -864,8 +913,8 @@ function openDlg(mode){
     const s = effStart();
     dlgRef = s || new Date();
     $('dlgTitle').textContent = 'Race start';
-    $('dlgSub').textContent = 'Gun time at Timberline · times are Pacific';
-    $('dlgInfo').innerHTML = infoRow('Planned gun time', df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED)) +
+    $('dlgSub').textContent = 'The starting gun at Timberline · times are Pacific';
+    $('dlgInfo').innerHTML = infoRow('Planned start', df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED)) +
       (s ? infoRow('Recorded', dayTag(s) + fmtTS(s)) : '');
     $('dlgLock').hidden = true;
     $('dlgTimeWrap').hidden = false; $('dlgCloseOnly').hidden = true; $('dlgKills').hidden = true;
@@ -1156,6 +1205,15 @@ async function sync(){
 window.addEventListener('online', () => { failStreak = 0; sync(); });
 window.addEventListener('offline', render);
 $('retryBtn').addEventListener('click', () => { failStreak = 0; sync(); });
+$('refreshBtn').addEventListener('click', () => { failStreak = 0; sync(); });
+
+/* ================= help / glossary ================= */
+$('helpItem').addEventListener('click', () => {
+  setHistory(false);
+  $('helpDlg').showModal();
+  if ($('helpDlg').focus) $('helpDlg').focus();
+});
+$('helpClose').addEventListener('click', () => $('helpDlg').close());
 
 /* ================= Rendering ================= */
 // The bar shows where the relay lands, not how far off plan it is; the delta
@@ -1183,7 +1241,7 @@ function render(){
     $('finishVal').textContent = 'not started';
     $('finishChip').className = 'tstat';
   } else {
-    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned fin';
+    $('finishLbl').textContent = actualEnd(36) ? 'Finished' : started ? 'Finish' : 'Planned';
     $('finishVal').textContent = dayTag(seaside) + fmtT(seaside);
     $('finishChip').className = 'tstat';
   }
@@ -1192,7 +1250,7 @@ function render(){
     $('clockLbl').textContent = cur ? 'Elapsed' : 'Final';
     $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
   } else {
-    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until gun' : 'Ready';
+    $('clockLbl').textContent = now < RACE_PLANNED ? 'Until start' : 'Ready';
     $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : '--:--:--';
   }
 
@@ -1201,35 +1259,35 @@ function render(){
     $('nowState').textContent = 'Race complete';
     $('nowRunner').textContent = 'Seaside 🎉';
     const fin = actualEnd(36), st = effStart();
-    $('nowElapsedLbl').textContent = 'Total time';
-    $('nowProjLbl').textContent = 'Crossed';
-    $('nowPlanLbl').textContent = 'Planned';
-    $('nowElapsed').textContent = fin && st ? fmtDur(fin - st) : '—';
+    $('nowElapsedLbl').textContent = 'Started';
+    $('nowProjLbl').textContent = 'Finished';
+    $('nowPlanLbl').textContent = 'Total';
+    $('nowElapsed').textContent = st ? fmtT(st) : '—';
     $('nowProj').textContent = fin ? fmtT(fin) : '—';
-    $('nowPlan').textContent = fmtDur(LEGS[35].predEnd - LEGS[0].predStart);
-    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust gun time</button>';
+    $('nowPlan').textContent = fin && st ? fmtDur(fin - st) : '—';
+    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust race start</button>';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
     $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
     $('nowState').innerHTML = started ? 'On the road · ' + vanSpan(cur.van) : 'Pre-race';
     $('nowRunner').textContent = dnn(cur);
     if (started && s){
-      $('nowElapsedLbl').textContent = 'On leg';
+      // Same fields and words as the active runner's tile: start, ETA, elapsed.
+      $('nowElapsedLbl').textContent = 'Started';
       $('nowProjLbl').textContent = 'ETA';
-      $('nowPlanLbl').textContent = 'Planned';
-      $('nowElapsed').textContent = fmtDur(now - s);
+      $('nowPlanLbl').textContent = 'On leg';
+      $('nowElapsed').textContent = fmtT(s);
       $('nowProj').textContent = fmtT(proj[cur.leg]);
-      $('nowPlan').textContent = fmtT(cur.predEnd);
-      $('nowSub').innerHTML = '<span>Took the handoff at ' + fmtT(s) +
-        '</span><button id="adjStart">Adjust gun time</button>';
+      $('nowPlan').textContent = fmtDur(now - s);
+      $('nowSub').innerHTML = '<span></span><button id="adjStart">Adjust race start</button>';
     } else {
-      $('nowElapsedLbl').textContent = 'Gun';
-      $('nowProjLbl').textContent = 'Leg plan';
-      $('nowPlanLbl').textContent = 'Planned';
+      $('nowElapsedLbl').textContent = 'Starts';
+      $('nowProjLbl').textContent = 'ETA';
+      $('nowPlanLbl').textContent = 'Leg time';
       $('nowElapsed').textContent = fmtT(RACE_PLANNED);
-      $('nowProj').textContent = fmtDur(cur.predDur);
-      $('nowPlan').textContent = fmtT(cur.predEnd);
-      $('nowSub').textContent = 'Gun scheduled ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' at Timberline.';
+      $('nowProj').textContent = fmtT(cur.predEnd);
+      $('nowPlan').textContent = fmtDur(cur.predDur);
+      $('nowSub').textContent = 'Race starts ' + df.format(RACE_PLANNED) + ' ' + fmtT(RACE_PLANNED) + ' at Timberline.';
     }
   }
 
@@ -1245,7 +1303,7 @@ function render(){
     stripWho.textContent = dnn(cur);
     stripMeta.innerHTML = started && hs
       ? fmtDur(now - hs) + '<span class="sep">·</span>ETA ' + dayTag(proj[cur.leg]) + fmtT(proj[cur.leg])
-      : 'gun ' + fmtT(RACE_PLANNED);
+      : 'starts ' + fmtT(RACE_PLANNED);
   }
 
   const hasDraft = !!draft;
@@ -1255,7 +1313,7 @@ function render(){
     const when = new Date(draft.whenISO);
     if (draft.kind === 'start'){
       $('confirmKind').textContent = 'Confirm race start';
-      $('confirmWho').textContent = 'Gun time — Timberline Lodge';
+      $('confirmWho').textContent = 'Race start — Timberline Lodge';
     } else {
       const L = LEGS[draft.leg - 1];
       const N = draft.leg < 36 ? LEGS[draft.leg] : null;
@@ -1275,7 +1333,7 @@ function render(){
     $('plunger').disabled = false;
     $('plunger').classList.add('startmode');
     $('plungerLabel').textContent = '🏁 Start race';
-    $('plungerSub').textContent = 'press at the gun — time stamps instantly';
+    $('plungerSub').textContent = 'press at the start — time stamps instantly';
   } else if (cur){
     $('plunger').disabled = false;
     $('plunger').classList.remove('startmode');
@@ -1410,6 +1468,7 @@ function render(){
   $('syncBadge').textContent = badge;
   $('syncText').textContent = text;
   $('syncDot').className = 'dot ' + cls;
+  $('refreshBtn').classList.toggle('spin', syncing);
   // Age, not a timestamp — on a 30-hour race "6:20:37 PM" says nothing about staleness.
   if (lastSyncAt){
     const age = Date.now() - lastSyncAt;
