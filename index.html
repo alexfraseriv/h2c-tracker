@@ -306,7 +306,11 @@
     font-variant-numeric:tabular-nums;font-size:var(--t-xs);color:var(--dim)}
   .rtimes .range{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rtimes .range b{font-weight:700;color:var(--ink)}
-  .rtimes .dur{flex:none;color:var(--faint)}
+  .rtimes .dur{flex:none;display:inline-flex;align-items:baseline;gap:3px;
+    font-family:var(--sans);font-variant-numeric:normal;color:var(--faint)}
+  .rtimes .dur .dico{font-size:9px;align-self:center;line-height:1}
+  .rtimes .dur .dnum{font-weight:600;letter-spacing:.01em}
+  .rtimes.cur .dur{color:var(--accent);font-weight:700}
   .rtimes.est{color:var(--faint)}
   .rtimes.est .range b{color:var(--dim);font-weight:600}
   .rtimes.cur .range b{color:var(--accent)}
@@ -727,6 +731,19 @@ function fmtDur(ms){
   const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
   const core = h > 0 ? h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
                      : m + ':' + String(sec).padStart(2,'0');
+  return (neg ? '-' : '') + core;
+}
+// Unit-suffixed durations for the leg rows, so a span can never be read as a
+// clock time the way "54:26" did next to "12:50 AM → 1:44 AM". fmtDur() itself
+// stays H:MM:SS for the race clock, leg dialog, and ETA strip.
+function fmtDurU(ms, withSecs){
+  const neg = ms < 0; ms = Math.abs(ms);
+  const s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  // Seconds only where they tick and matter (the live leg). Static rows show
+  // whole minutes — narrower, and the exact second isn't something you scan for.
+  const core = h > 0 ? h + 'h ' + String(m).padStart(2,'0') + 'm'
+             : withSecs ? m + 'm ' + String(sec).padStart(2,'0') + 's'
+                        : m + 'm';
   return (neg ? '-' : '') + core;
 }
 function fmtDelta(ms){
@@ -1349,10 +1366,14 @@ function render(){
           '<span class="dist">' + L.miles.toFixed(2) + ' mi</span></span>' + status + '</span>' +
           '<span class="rtimes' + (end ? '' : isCur ? ' cur' : ' est') + '">' +
             (end ? '' : '<span class="estlbl">est</span>') +
+            // Same day on both sides → tag once; only repeat it across midnight.
             '<span class="range">' + dayTag(rStart) + fmtT(rStart) + ' → ' +
-            '<b>' + dayTag(rFinish) + fmtT(rFinish) + '</b></span>' +
+            '<b>' + (dayTag(rFinish) === dayTag(rStart) ? '' : dayTag(rFinish)) + fmtT(rFinish) + '</b></span>' +
             (q ? '<span class="tag q">QUEUED</span>' : '') +
-            '<span class="dur">' + fmtDur(isCur ? now - rStart : rFinish - rStart) + '</span>' +
+            '<span class="dur">' +
+              (isCur ? '<span class="dico" aria-hidden="true">\u{23F1}</span>' : '') +
+              '<span class="dnum">' + fmtDurU(isCur ? now - rStart : rFinish - rStart, isCur) + '</span>' +
+            '</span>' +
           '</span>' +
         '</span></button>' +
         (end ? '<button class="killbtn"' + (kills == null ? ' data-empty="1"' : '') + ' data-leg="' + L.leg +
