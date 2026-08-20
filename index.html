@@ -468,7 +468,6 @@
       </div>
       <div class="barstats">
         <span class="bstat" id="legsStat"><b>0/36</b> legs</span>
-        <span class="bstat" id="killsStat"><b>0</b> 🦞</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
@@ -1367,16 +1366,9 @@ function render(){
       '<span class="eta">show all ↗</span></button>'
     : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
-  // team kills total (shown in the top bar)
-  let totalKills = 0;
-  for (const L of LEGS) totalKills += killsFor(L.leg) || 0;
-
-  // top-bar mini stats: legs done + total roadkills, beside the clock
+  // top-bar mini stat: legs done, beside the clock
   const legsDone = LEGS.length - legsLeft;
   $('legsStat').innerHTML = '<b>' + legsDone + '/' + LEGS.length + '</b> legs';
-  // Just the lobster in the cramped top bar; the runner+lobster mark stays on
-  // the roomier leg tiles and kill panel.
-  $('killsStat').innerHTML = '<b>' + totalKills + '</b> \u{1F99E}';
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
