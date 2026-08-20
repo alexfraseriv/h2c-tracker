@@ -88,22 +88,43 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;gap:var(--s3);min-width:0;flex:1;overflow:hidden}
+  .ident{display:flex;align-items:center;gap:var(--s2);min-width:0;flex:1;overflow:hidden}
   .topbar > div:last-child{flex:none}
   /* The race clock says what it is; it keeps its width. */
   .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
-  /* Legs done rides alongside the clock, mirroring it (label over value at the
-     clock's size); it yields and clips before the clock when the bar is tight. */
+  /* Legs done and Kills ride alongside the clock, mirroring it (label over value
+     at the clock's size); they yield and clip before the clock when tight. */
   .barstats{display:flex;flex-direction:column;align-items:flex-start;gap:1px;
     flex:0 1 auto;min-width:0;overflow:hidden;
-    padding-left:var(--s3);border-left:1px solid var(--line)}
+    padding-left:var(--s2);border-left:1px solid var(--line)}
   .bstat{font-size:var(--t-lg);font-weight:800;color:var(--ink);
     font-family:var(--mono);font-variant-numeric:tabular-nums;
     white-space:nowrap;line-height:1.1;letter-spacing:-.02em}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
-    font-weight:700;color:var(--faint);line-height:1}
+    font-weight:700;color:var(--faint);line-height:1;white-space:nowrap}
+  /* The roadkill mark rides inside the Kills label, not as its own big glyph. */
+  .barstats .kem{font-size:12px;letter-spacing:-2px;margin-right:3px;vertical-align:-1px}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
     font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
+  /* Green completion edge — fills the header's bottom as legs finish. */
+  #raceEdge{position:absolute;left:0;bottom:-1px;height:2px;width:0;max-width:100%;
+    border-radius:0 2px 2px 0;background:var(--good-fill);
+    box-shadow:0 0 6px color-mix(in srgb, var(--good-fill) 45%, transparent);
+    transition:width .5s ease;z-index:21}
+  /* The mark rides in the Kills label only where it fits cleanly (390px+);
+     on narrower phones the label falls back to plain "Kills". */
+  @media (max-width:389px){ .barstats .kem{display:none} }
+  @media (max-width:360px){
+    .topbar{padding:6px var(--s3)}
+    .ident{gap:6px}
+    #syncPill{padding:0 10px}
+  }
+  /* Smallest phones (SE): step the mono values down one size so all three
+     stats fit beside the clock without clipping. */
+  @media (max-width:340px){
+    .ident{gap:5px}
+    #raceClock,.bstat{font-size:var(--t-base)}
+  }
 
   /* Sync status lives in the bar as a bare dot — green synced, yellow working,
      red offline or errored. The words behind it are in the status menu. */
@@ -146,6 +167,24 @@
   .gterm b{font-size:var(--t-base);font-weight:700;color:var(--ink)}
   .gterm>span{font-size:var(--t-md);color:var(--dim);line-height:1.45}
   .gterm>span b{font-family:var(--mono);font-size:var(--t-sm);font-weight:700;color:var(--dim)}
+  /* Glossary: title and Close stay put; only the term list scrolls, with a
+     slim themed scrollbar instead of the OS default. */
+  #helpDlg[open]{display:flex;flex-direction:column;padding:0;overflow:hidden;
+    max-height:min(88vh,88dvh)}
+  #helpDlg h2{padding:var(--s5) var(--s5) 0}
+  #helpDlg .sub{padding:0 var(--s5);margin-bottom:var(--s2)}
+  #helpDlg .gloss{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    margin:0;padding:var(--s2) var(--s5) var(--s4)}
+  #helpDlg .dlg-actions{flex:none;padding:var(--s3) var(--s5) max(var(--s5), env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);background:var(--panel)}
+  /* slim themed scrollbars on the scrollable surfaces */
+  #helpDlg .gloss, #history, dialog{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  #helpDlg .gloss::-webkit-scrollbar, #history::-webkit-scrollbar, dialog::-webkit-scrollbar{width:9px;height:9px}
+  #helpDlg .gloss::-webkit-scrollbar-thumb, #history::-webkit-scrollbar-thumb, dialog::-webkit-scrollbar-thumb{
+    background:var(--line);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+  #helpDlg .gloss::-webkit-scrollbar-thumb:hover, #history::-webkit-scrollbar-thumb:hover, dialog::-webkit-scrollbar-thumb:hover{
+    background:var(--faint)}
+  #helpDlg .gloss::-webkit-scrollbar-track, #history::-webkit-scrollbar-track, dialog::-webkit-scrollbar-track{background:transparent}
 
 
   /* who is running right now — slides in once the bib card scrolls away */
@@ -286,14 +325,17 @@
   .legendnote b{color:var(--dim);font-weight:700}
 
   /* ================= up next ================= */
-  .nextrow{display:flex;align-items:center;gap:var(--s3);min-height:var(--tap);
-    padding:var(--s2) 0;border-bottom:1px solid var(--line-soft)}
+  .nextrow{display:flex;align-items:center;gap:var(--s3);min-height:38px;
+    padding:6px 0;border-bottom:1px solid var(--line-soft)}
   .nextrow:last-child{border-bottom:0}
   .nextrow .legchip{font-size:var(--t-xs);padding:3px 7px;min-width:34px;text-align:center}
   .nextrow .who{flex:1;font-weight:600;font-size:var(--t-base);min-width:0;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .nextrow .eta{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-sm);color:var(--dim);flex:none}
   .nextrow .eta b{color:var(--ink);font-weight:700}
+  /* one short EST tag, then the estimated start → finish window */
+  .nextrow .eta .est{font-family:var(--sans);font-size:var(--t-2xs);font-weight:700;
+    letter-spacing:.06em;color:var(--faint);margin-right:5px}
 
   /* ================= van filter ================= */
   .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s1);gap:var(--s1)}
@@ -372,6 +414,28 @@
   .killbtn[data-empty] b{color:var(--faint);font-weight:600}
   .killbtn[data-empty] .kico{opacity:.5}
   .killbtn:active{background:var(--panel-3)}
+
+  /* van roadkill scoreboard — banked at each exchange, sits just above the band */
+  .vantot{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+    padding:8px var(--s3);margin:var(--s3) 0 6px;border-radius:var(--r-md)}
+  .vantot .lbl{font-size:var(--t-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .vantot .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;
+    font-size:var(--t-base);color:var(--ink)}
+  .vantot .val .kico{font-size:var(--t-sm);letter-spacing:-2px;margin-right:3px}
+  .vantot .val .u{color:var(--faint);font-weight:600;font-size:var(--t-2xs);
+    letter-spacing:.06em;text-transform:uppercase;margin-left:4px}
+  .vantot.v1{border:1px solid color-mix(in srgb, var(--van1) 38%, transparent);
+    background:color-mix(in srgb, var(--van1) 9%, transparent)}
+  .vantot.v1 .lbl{color:var(--van1)}
+  .vantot.v2{border:1px solid color-mix(in srgb, var(--van2) 38%, transparent);
+    background:color-mix(in srgb, var(--van2) 9%, transparent)}
+  .vantot.v2 .lbl{color:var(--van2)}
+  .vantot.vfin{justify-content:space-around;
+    border:1px solid color-mix(in srgb, var(--good) 40%, var(--line));
+    background:color-mix(in srgb, var(--good) 8%, transparent)}
+  .vantot .vfin-c{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .vantot .vfin-c.v1 .lbl{color:var(--van1)} .vantot .vfin-c.v2 .lbl{color:var(--van2)}
+  .vantot + .exline{margin-top:0}
 
   /* exchange band */
   .exline{display:grid;grid-template-columns:34px 1fr auto;gap:var(--s3);align-items:center;
@@ -470,14 +534,22 @@
         <span class="tlabel">Legs</span>
         <span class="bstat mono" id="legsStat">0/36</span>
       </div>
+      <div class="barstats">
+        <span class="tlabel"><span class="kem" aria-hidden="true">🏃🦞</span>Kills</span>
+        <span class="bstat mono" id="killsStat">0</span>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
-      <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
+      <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      </button>
       <button id="syncPill" aria-expanded="false" aria-controls="history" aria-label="Status and settings">
-        <span class="dot"></span><span class="gearico" aria-hidden="true">⚙</span>
+        <span class="dot"></span>
+        <svg class="gearico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
     </div>
   </div>
+  <div id="raceEdge" aria-hidden="true"></div>
 
   <div id="nowStrip" aria-hidden="true">
     <div class="strip-in">
@@ -638,6 +710,9 @@
 
     <div class="gsec">Top bar</div>
     <div class="gterm"><b>Elapsed · Until start</b><span>The big clock: counts down to the start, then counts up from it.</span></div>
+    <div class="gterm"><b>Legs</b><span>How many of the 36 legs are finished.</span></div>
+    <div class="gterm"><b>🏃🦞 Kills</b><span>Your team's roadkills so far, added up across every leg.</span></div>
+    <div class="gterm"><b>Green edge</b><span>The thin green line under the bar fills left to right as legs finish — the whole race's progress at a glance.</span></div>
     <div class="gterm"><b>The dot</b><span>Sync status, at a glance. Green = everything's saved to the sheet. Amber = sending, or changes are waiting. Red = offline, or a problem. Tap it for the details and settings.</span></div>
     <div class="gterm"><b>↻ Refresh</b><span>Pulls the latest from the sheet right now, instead of waiting for the once-a-minute check.</span></div>
 
@@ -776,6 +851,10 @@ function killsFor(leg){
   if (q) return q.kills;
   const k = serverKills[leg];
   return typeof k === 'number' ? k : null;
+}
+// A van's running roadkill total across its own legs up to (and including) a leg.
+function vanKillsThrough(van, leg){
+  return LEGS.reduce((s, L) => (L.van === van && L.leg <= leg) ? s + (killsFor(L.leg) || 0) : s, 0);
 }
 function effStart(){
   const q = queuedStart();
@@ -1338,13 +1417,12 @@ function render(){
     $('plunger').classList.remove('startmode');
     if (nextLeg){
       const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
-      $('plungerLabel').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner);
-      $('plungerSub').textContent = swapEx
-        ? 'press at the exchange — ' + swapEx.name
-        : 'press the moment ' + dn(cur.runner) + ' crosses';
+      $('plungerLabel').textContent = 'Record handoff';
+      $('plungerSub').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner) +
+        (swapEx ? ' · ' + swapEx.name : '');
     } else {
-      $('plungerLabel').textContent = dn(cur.runner) + ' → finish line';
-      $('plungerSub').textContent = 'press when ' + dn(cur.runner) + ' crosses in Seaside';
+      $('plungerLabel').textContent = 'Record finish';
+      $('plungerSub').textContent = dn(cur.runner) + ' → finish line · Seaside';
     }
   } else {
     $('plunger').disabled = true;
@@ -1357,19 +1435,28 @@ function render(){
                        .filter(L => !vanFilter || L.van === vanFilter).slice(0, 2);
   const legsLeft = LEGS.filter(L => !actualEnd(L.leg)).length;
   const vanDoneOnly = !upcoming.length && vanFilter && legsLeft > 0;
-  $('nextUp').innerHTML = upcoming.length ? upcoming.map(L =>
-    '<div class="nextrow"><span class="legchip c' + L.van + '">L' + L.leg + '</span>' +
-    '<span class="who">' + esc(dnn(L)) + '</span>' +
-    '<span class="eta">ETA <b>' + dayTag(proj[L.leg]) + fmtT(proj[L.leg]) + '</b></span></div>'
-  ).join('') : vanDoneOnly
+  $('nextUp').innerHTML = upcoming.length ? upcoming.map(L => {
+    // Estimated window: this leg starts when the one before it ends, and finishes
+    // at its own projection. Day tag repeats only when the pair crosses midnight.
+    const s0 = L.leg === 1 ? (effStart() || RACE_PLANNED) : (actualEnd(L.leg - 1) || proj[L.leg - 1]);
+    const s1 = proj[L.leg];
+    const d0 = dayTag(s0), d1 = dayTag(s1);
+    return '<div class="nextrow"><span class="legchip c' + L.van + '">L' + L.leg + '</span>' +
+      '<span class="who">' + esc(dnn(L)) + '</span>' +
+      '<span class="eta"><span class="est">EST</span>' + d0 + fmtT(s0) + ' → ' +
+      '<b>' + (d1 === d0 ? '' : d1) + fmtT(s1) + '</b></span></div>';
+  }).join('') : vanDoneOnly
     ? '<button class="nextrow" id="clearVan"><span class="who">Van ' + vanFilter + ' is done — ' +
       legsLeft + ' leg' + (legsLeft === 1 ? '' : 's') + ' still out there</span>' +
       '<span class="eta">show all ↗</span></button>'
     : '<div class="nextrow"><span class="who" style="color:var(--faint)">Nothing left — go celebrate.</span></div>';
 
-  // top-bar mini stat: legs done, beside the clock
+  // top-bar mini stats: legs done and total roadkills, beside the clock
   const legsDone = LEGS.length - legsLeft;
   $('legsStat').textContent = legsDone + '/' + LEGS.length;
+  $('killsStat').textContent = LEGS.reduce((s, L) => s + (killsFor(L.leg) || 0), 0);
+  // green completion edge fills the header's bottom as legs finish
+  $('raceEdge').style.width = (LEGS.length ? (legsDone / LEGS.length) * 100 : 0) + '%';
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
@@ -1383,7 +1470,22 @@ function render(){
               : x.kind === 'finish' ? 'Finish line — Seaside'
               : vanSpan(x.from) + ' → ' + vanSpan(x.to);
     const plan = x.afterLeg === 0 ? RACE_PLANNED : LEGS[x.afterLeg - 1].predEnd;
-    return '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
+    // Van scoreboard: the outgoing van's running roadkill total, banked right at
+    // the exchange once its set is in. The finish shows both vans side by side.
+    let band = '';
+    if (x.kind === 'swap' && done){
+      band = '<div class="vantot v' + x.from + '">' +
+        '<span class="lbl">Van ' + x.from + ' · through leg ' + x.afterLeg + '</span>' +
+        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(x.from, x.afterLeg) +
+        '<span class="u">total</span></span></div>';
+    } else if (x.kind === 'finish' && done){
+      band = '<div class="vantot vfin">' +
+        '<span class="vfin-c v1"><span class="lbl">Van 1</span>' +
+        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(1, 36) + '</span></span>' +
+        '<span class="vfin-c v2"><span class="lbl">Van 2</span>' +
+        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(2, 36) + '</span></span></div>';
+    }
+    return band + '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
       '<span class="ic">' + ic + '</span>' +
       '<a class="exmid" href="' + x.url + '" target="_blank" rel="noopener">' +
       '<div class="name">' + esc(x.name) + '</div>' +
