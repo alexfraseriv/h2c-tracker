@@ -102,8 +102,9 @@
     white-space:nowrap;line-height:1.1;letter-spacing:-.02em}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1;white-space:nowrap}
-  /* The roadkill mark rides inside the Kills label, not as its own big glyph. */
-  .barstats .kem{font-size:12px;letter-spacing:-2px;margin-right:3px;vertical-align:-1px}
+  /* The roadkill mark rides inside the Kills label, sized down to the label's
+     own text so it reads as part of the word, not a big glyph beside it. */
+  .barstats .kem{font-size:10px;letter-spacing:-2px;margin-right:3px;vertical-align:0}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
     font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
   /* Green completion edge — fills the header's bottom as legs finish. */
@@ -415,27 +416,59 @@
   .killbtn[data-empty] .kico{opacity:.5}
   .killbtn:active{background:var(--panel-3)}
 
-  /* van roadkill scoreboard — banked at each exchange, sits just above the band */
+  /* van roadkill scoreboard — banked at each exchange, sits just above the band.
+     Tap it for the van's runner breakdown. */
   .vantot{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
-    padding:8px var(--s3);margin:var(--s3) 0 6px;border-radius:var(--r-md)}
+    width:100%;text-align:left;padding:8px var(--s3);margin:var(--s3) 0 6px;border-radius:var(--r-md)}
   .vantot .lbl{font-size:var(--t-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .vantot .vright{display:flex;align-items:center;gap:var(--s1)}
   .vantot .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;
     font-size:var(--t-base);color:var(--ink)}
   .vantot .val .kico{font-size:var(--t-sm);letter-spacing:-2px;margin-right:3px}
   .vantot .val .u{color:var(--faint);font-weight:600;font-size:var(--t-2xs);
     letter-spacing:.06em;text-transform:uppercase;margin-left:4px}
+  .vantot .vchev{font-size:var(--t-lg);font-weight:700;color:var(--faint);line-height:1;margin-left:2px}
+  .vantot.vansum{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .vantot.vansum:active{filter:brightness(1.14)}
   .vantot.v1{border:1px solid color-mix(in srgb, var(--van1) 38%, transparent);
     background:color-mix(in srgb, var(--van1) 9%, transparent)}
   .vantot.v1 .lbl{color:var(--van1)}
   .vantot.v2{border:1px solid color-mix(in srgb, var(--van2) 38%, transparent);
     background:color-mix(in srgb, var(--van2) 9%, transparent)}
   .vantot.v2 .lbl{color:var(--van2)}
-  .vantot.vfin{justify-content:space-around;
+  .vantot.vfin{justify-content:space-around;gap:var(--s2);
     border:1px solid color-mix(in srgb, var(--good) 40%, var(--line));
     background:color-mix(in srgb, var(--good) 8%, transparent)}
-  .vantot .vfin-c{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .vantot .vfin-c{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:4px var(--s2);border-radius:var(--r-sm);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .vantot .vfin-c:active{background:color-mix(in srgb, var(--ink) 8%, transparent)}
   .vantot .vfin-c.v1 .lbl{color:var(--van1)} .vantot .vfin-c.v2 .lbl{color:var(--van2)}
   .vantot + .exline{margin-top:0}
+
+  /* van runner summary dialog */
+  #vanDlg .vsum-tot{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2);
+    border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);
+    padding:var(--s3);margin-bottom:var(--s4)}
+  .vsum-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .vsum-cl{font-size:var(--t-2xs);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vsum-cell b{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-base);
+    font-weight:800;letter-spacing:-.01em}
+  .vsum-list{display:flex;flex-direction:column;gap:var(--s3)}
+  .vsum-row{border-top:1px solid var(--line-soft);padding-top:var(--s3)}
+  .vsum-row:first-child{border-top:0;padding-top:0}
+  .vsum-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2)}
+  .vsum-name{font-weight:700;font-size:var(--t-base)}
+  .vsum-rn{font-family:var(--mono);font-size:var(--t-xs);color:var(--faint);font-weight:700}
+  .vsum-pace{font-size:var(--t-md);color:var(--dim);font-weight:700}
+  .vsum-pace .u{color:var(--faint);font-weight:600;font-size:var(--t-xs);margin-left:1px}
+  .vsum-meta{font-size:var(--t-sm);color:var(--faint);margin:2px 0 6px}
+  .vsum-barline{display:flex;align-items:center;gap:var(--s2)}
+  .vsum-bar{flex:1;height:8px;border-radius:var(--r-pill);background:var(--panel-3);overflow:hidden}
+  .vsum-bar>i{display:block;height:100%;border-radius:inherit;min-width:3px;transition:width .3s ease}
+  .vsum-row.v1 .vsum-bar>i{background:var(--van1)} .vsum-row.v2 .vsum-bar>i{background:var(--van2)}
+  .vsum-k{flex:none;font-family:var(--mono);font-size:var(--t-sm);color:var(--dim);font-weight:700}
+  .vsum-fallback{font-size:var(--t-md);color:var(--dim);line-height:1.5}
 
   /* exchange band */
   .exline{display:grid;grid-template-columns:34px 1fr auto;gap:var(--s3);align-items:center;
@@ -718,8 +751,16 @@
 
     <div class="gsec">Roadkills</div>
     <div class="gterm"><b>Roadkills 🏃🦞</b><span>Runners from other teams you pass on a leg. Tap the icon on a finished leg to log them. The count earns a Halo medal — Killing Spree at 5, Killing Frenzy at 10, Running Riot at 15, all the way up.</span></div>
+    <div class="gterm"><b>Van totals</b><span>The van's running roadkill line at each exchange. Tap it to see every runner in that van — their legs, distance, pace and kills so far.</span></div>
   </div>
   <div class="dlg-actions"><button class="ghost" id="helpClose" style="flex:1">Close</button></div>
+</dialog>
+
+<dialog id="vanDlg" tabindex="-1">
+  <h2 id="vanDlgTitle">Van</h2>
+  <div class="sub" id="vanDlgSub">—</div>
+  <div id="vanDlgBody"></div>
+  <div class="dlg-actions"><button class="ghost" id="vanDlgClose" style="flex:1">Close</button></div>
 </dialog>
 
 <script>
@@ -855,6 +896,76 @@ function killsFor(leg){
 // A van's running roadkill total across its own legs up to (and including) a leg.
 function vanKillsThrough(van, leg){
   return LEGS.reduce((s, L) => (L.van === van && L.leg <= leg) ? s + (killsFor(L.leg) || 0) : s, 0);
+}
+// Per-runner rollup for a van, over its finished legs through a given leg. Pure
+// and side-effect free so it can't disturb the rest of the app; the caller wraps
+// it in try/catch and falls back to the headline number if anything here throws.
+function vanSummary(van, throughLeg){
+  const rows = {};
+  let totMiles = 0, totTime = 0, totKills = 0, legsDone = 0;
+  for (const L of LEGS){
+    if (L.van !== van || L.leg > throughLeg) continue;
+    const end = actualEnd(L.leg);
+    if (!end) continue;                       // only legs actually recorded
+    const start = L.leg === 1 ? (effStart() || RACE_PLANNED)
+                              : (actualEnd(L.leg - 1) || L.predStart);
+    const dur = Math.max(0, end - start);
+    const k = killsFor(L.leg) || 0;
+    const r = rows[L.rnum] || (rows[L.rnum] = { rnum: L.rnum, name: dn(L.runner), legs: 0, miles: 0, timeMs: 0, kills: 0 });
+    r.legs++; r.miles += L.miles; r.timeMs += dur; r.kills += k;
+    totMiles += L.miles; totTime += dur; totKills += k; legsDone++;
+  }
+  const list = Object.values(rows).sort((a, b) => a.rnum - b.rnum);
+  return { van, throughLeg, list, totMiles, totTime, totKills, legsDone };
+}
+function vanStatCell(label, val){
+  return '<div class="vsum-cell"><span class="vsum-cl">' + label + '</span><b>' + val + '</b></div>';
+}
+function vanSummaryHTML(s, van){
+  if (!s.list.length) return '<p class="vsum-fallback">No finished legs for this van yet.</p>';
+  const vc = 'v' + van;
+  const maxK = Math.max(1, ...s.list.map(r => r.kills));
+  const totPace = s.totMiles > 0 ? fmtDur(s.totTime / s.totMiles) : '—';
+  let h = '<div class="vsum-tot">' +
+    vanStatCell('Legs', s.legsDone) +
+    vanStatCell('Miles', s.totMiles.toFixed(1)) +
+    vanStatCell('Pace', totPace) +
+    vanStatCell(CHASE + ' Kills', s.totKills) +
+    '</div><div class="vsum-list">';
+  for (const r of s.list){
+    const pace = r.miles > 0 ? fmtDur(r.timeMs / r.miles) : '—';
+    const pct = Math.round(r.kills / maxK * 100);
+    h += '<div class="vsum-row ' + vc + '">' +
+      '<div class="vsum-head"><span class="vsum-name">' + esc(r.name) +
+        ' <span class="vsum-rn">R' + r.rnum + '</span></span>' +
+        '<span class="vsum-pace mono">' + pace + '<span class="u">/mi</span></span></div>' +
+      '<div class="vsum-meta">' + r.legs + ' leg' + (r.legs === 1 ? '' : 's') +
+        ' · ' + r.miles.toFixed(1) + ' mi · ' + fmtDur(r.timeMs) + '</div>' +
+      '<div class="vsum-barline"><span class="vsum-bar"><i style="width:' + pct + '%"></i></span>' +
+        '<span class="vsum-k mono">' + CHASE + ' ' + r.kills + '</span></div>' +
+      '</div>';
+  }
+  return h + '</div>';
+}
+function openVanSummary(van, through){
+  const dlg = $('vanDlg');
+  if (!dlg || !dlg.showModal) return;         // ancient browser: do nothing rather than break
+  try {
+    $('vanDlgTitle').textContent = 'Van ' + van;
+    $('vanDlgSub').textContent = 'through leg ' + through + ' · all times Pacific';
+    $('vanDlgBody').innerHTML = vanSummaryHTML(vanSummary(van, through), van);
+  } catch (e){
+    // Fallback: show the one number we can always trust and say the rest is fine.
+    console.error('van summary failed', e);
+    let k = 0; try { k = vanKillsThrough(van, through); } catch(_){}
+    $('vanDlgTitle').textContent = 'Van ' + van;
+    $('vanDlgSub').textContent = 'through leg ' + through;
+    $('vanDlgBody').innerHTML = '<p class="vsum-fallback">Couldn’t build the full runner ' +
+      'breakdown just now — but Van ' + van + ' has ' + CHASE + ' ' + k + ' roadkills so far, and ' +
+      'the rest of the tracker is unaffected. Try again after the next refresh.</p>';
+  }
+  dlg.showModal();
+  if (dlg.focus) dlg.focus();
 }
 function effStart(){
   const q = queuedStart();
@@ -1170,6 +1281,8 @@ $('dlgLock').addEventListener('click', (ev) => {
 $('dlgCancel').addEventListener('click', () => dlg.close());
 $('dlgClose2').addEventListener('click', () => dlg.close());
 $('timeline').addEventListener('click', (ev) => {
+  const vs = ev.target.closest('.vansum');
+  if (vs) return openVanSummary(Number(vs.dataset.van), Number(vs.dataset.through));
   const kb = ev.target.closest('.killbtn');
   if (kb) return openDlg({ kind:'kills', leg: Number(kb.dataset.leg) });
   const row = ev.target.closest('.rowmain');
@@ -1312,6 +1425,7 @@ $('helpItem').addEventListener('click', () => {
   if ($('helpDlg').focus) $('helpDlg').focus();
 });
 $('helpClose').addEventListener('click', () => $('helpDlg').close());
+$('vanDlgClose').addEventListener('click', () => $('vanDlg').close());
 
 /* ================= Rendering ================= */
 function render(){
@@ -1474,16 +1588,19 @@ function render(){
     // the exchange once its set is in. The finish shows both vans side by side.
     let band = '';
     if (x.kind === 'swap' && done){
-      band = '<div class="vantot v' + x.from + '">' +
+      band = '<button class="vantot vansum v' + x.from + '" data-van="' + x.from + '" data-through="' + x.afterLeg +
+        '" aria-label="Van ' + x.from + ' runner summary through leg ' + x.afterLeg + '">' +
         '<span class="lbl">Van ' + x.from + ' · through leg ' + x.afterLeg + '</span>' +
-        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(x.from, x.afterLeg) +
-        '<span class="u">total</span></span></div>';
+        '<span class="vright"><span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(x.from, x.afterLeg) +
+        '<span class="u">total</span></span><span class="vchev" aria-hidden="true">›</span></span></button>';
     } else if (x.kind === 'finish' && done){
       band = '<div class="vantot vfin">' +
-        '<span class="vfin-c v1"><span class="lbl">Van 1</span>' +
-        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(1, 36) + '</span></span>' +
-        '<span class="vfin-c v2"><span class="lbl">Van 2</span>' +
-        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(2, 36) + '</span></span></div>';
+        '<button class="vfin-c vansum v1" data-van="1" data-through="36" aria-label="Van 1 runner summary">' +
+        '<span class="lbl">Van 1</span>' +
+        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(1, 36) + '</span></button>' +
+        '<button class="vfin-c vansum v2" data-van="2" data-through="36" aria-label="Van 2 runner summary">' +
+        '<span class="lbl">Van 2</span>' +
+        '<span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(2, 36) + '</span></button></div>';
     }
     return band + '<div class="exline' + (isNext ? ' nextex' : '') + '">' +
       '<span class="ic">' + ic + '</span>' +
