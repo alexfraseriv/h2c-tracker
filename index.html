@@ -92,14 +92,14 @@
   .topbar > div:last-child{flex:none}
   /* The race clock says what it is; it keeps its width. */
   .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
-  /* Legs done + total roadkills ride alongside the clock; they yield (and clip)
-     before the clock does when the bar gets tight. */
-  .barstats{display:flex;flex-direction:column;justify-content:center;gap:3px;
+  /* Legs done rides alongside the clock, mirroring it (label over value at the
+     clock's size); it yields and clips before the clock when the bar is tight. */
+  .barstats{display:flex;flex-direction:column;align-items:flex-start;gap:1px;
     flex:0 1 auto;min-width:0;overflow:hidden;
     padding-left:var(--s3);border-left:1px solid var(--line)}
-  .bstat{font-size:var(--t-xs);color:var(--dim);white-space:nowrap;line-height:1;
-    font-variant-numeric:tabular-nums}
-  .bstat b{color:var(--ink);font-weight:800;font-family:var(--mono)}
+  .bstat{font-size:var(--t-lg);font-weight:800;color:var(--ink);
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    white-space:nowrap;line-height:1.1;letter-spacing:-.02em}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
   #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
@@ -467,7 +467,8 @@
         <span id="raceClock" class="mono">--:--:--</span>
       </div>
       <div class="barstats">
-        <span class="bstat" id="legsStat"><b>0/36</b> legs</span>
+        <span class="tlabel">Legs</span>
+        <span class="bstat mono" id="legsStat">0/36</span>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
@@ -1368,7 +1369,7 @@ function render(){
 
   // top-bar mini stat: legs done, beside the clock
   const legsDone = LEGS.length - legsLeft;
-  $('legsStat').innerHTML = '<b>' + legsDone + '/' + LEGS.length + '</b> legs';
+  $('legsStat').textContent = legsDone + '/' + LEGS.length;
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
