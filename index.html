@@ -88,14 +88,22 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;min-width:0;flex:1;overflow:hidden}
+  .ident{display:flex;align-items:center;gap:var(--s3);min-width:0;flex:1;overflow:hidden}
   .topbar > div:last-child{flex:none}
-  /* The race clock says what it is. */
-  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+  /* The race clock says what it is; it keeps its width. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
+  /* Legs done + total roadkills ride alongside the clock; they yield (and clip)
+     before the clock does when the bar gets tight. */
+  .barstats{display:flex;flex-direction:column;justify-content:center;gap:3px;
+    flex:0 1 auto;min-width:0;overflow:hidden;
+    padding-left:var(--s3);border-left:1px solid var(--line)}
+  .bstat{font-size:var(--t-xs);color:var(--dim);white-space:nowrap;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .bstat b{color:var(--ink);font-weight:800;font-family:var(--mono);font-size:var(--t-sm)}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
-  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
-    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
+  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
+    font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
 
   /* Sync status lives in the bar as a bare dot — green synced, yellow working,
      red offline or errored. The words behind it are in the status menu. */
@@ -152,13 +160,25 @@
   /* ================= sync + history panel ================= */
   /* Swallows the dismissing tap so it cannot also arm a handoff on the
      plunger the panel is covering. */
-  #scrim{position:fixed;inset:0;z-index:18;background:transparent}
+  #scrim{position:fixed;inset:0;z-index:18;background:rgba(8,11,16,.34);
+    opacity:0;transition:opacity .16s ease}
+  #scrim.show{opacity:1}
   #scrim[hidden]{display:none}
-  #history{position:absolute;top:100%;left:0;right:0;z-index:19;display:none;
-    background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow);
-    max-height:min(80vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  #history.show{display:block}
-  .sp-inner{max-width:520px;margin:0 auto;padding:var(--s3) var(--s4) var(--s4)}
+  /* A popover card that springs from the gear, not a full-width page section. */
+  #history{position:absolute;top:calc(100% + 6px);right:var(--s3);z-index:19;
+    width:min(360px, calc(100vw - var(--s3) * 2));
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);
+    max-height:min(78vh,600px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:top right;
+    transition:opacity .16s ease, transform .16s ease, visibility .16s}
+  #history.show{opacity:1;visibility:visible;transform:none}
+  .sp-inner{padding:var(--s3) var(--s4) var(--s4)}
+  .sp-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s3)}
+  .sp-title{font-size:var(--t-base);font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .menu-x{width:32px;height:32px;flex:none;border-radius:var(--r-pill);border:1px solid var(--line);
+    background:var(--panel-2);color:var(--dim);font-size:14px;line-height:1;
+    display:flex;align-items:center;justify-content:center}
+  .menu-x:active{background:var(--panel-3);color:var(--ink)}
   .sheetlink{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
     min-height:var(--tap);margin-bottom:var(--s3);padding:0 var(--s3);
     border:1px solid color-mix(in srgb, var(--accent) 45%, var(--line));border-radius:var(--r-md);
@@ -222,11 +242,8 @@
     font-weight:700;letter-spacing:-.01em;white-space:nowrap}
   #nowDelta.ahead{color:var(--good)} #nowDelta.behind{color:var(--accent)}
   #nowSub{margin-top:var(--s3);font-size:var(--t-md);color:var(--dim);
-    border-top:1px solid var(--line-soft);padding-top:var(--s3);
-    display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
-  #nowSub span{min-width:0}
-  #nowSub button{color:var(--accent);font-size:var(--t-md);font-weight:700;padding:2px 0;flex:none;
-    text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+    border-top:1px solid var(--line-soft);padding-top:var(--s3)}
+  #nowSub:empty{display:none}
 
   /* ================= plunger ================= */
   #plunger{width:100%;min-height:88px;border-radius:var(--r-xl);background:var(--accent-fill);color:var(--accent-ink);
@@ -453,6 +470,10 @@
         <span class="tlabel" id="clockLbl">Elapsed</span>
         <span id="raceClock" class="mono">--:--:--</span>
       </div>
+      <div class="barstats">
+        <span class="bstat" id="legsStat"><b>0/36</b> legs</span>
+        <span class="bstat" id="killsStat"><b>0</b> 🏃🦞</span>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:var(--s2)">
       <button id="refreshBtn" aria-label="Refresh — pull the latest from the sheet">↻</button>
@@ -470,8 +491,12 @@
     </div>
   </div>
 
-  <div id="history" aria-label="Sync status and change history">
+  <div id="history" role="dialog" aria-label="Status and settings">
     <div class="sp-inner">
+      <div class="sp-head">
+        <span class="sp-title">Status &amp; settings</span>
+        <button id="menuClose" class="menu-x" aria-label="Close">✕</button>
+      </div>
       <a id="sheetLink" class="sheetlink" target="_blank" rel="noopener" hidden>
         <span>Open the team sheet</span><span class="sheetarrow">↗</span>
       </a>
@@ -486,6 +511,7 @@
       <div class="sp-sec"><span class="eyebrow">Settings</span></div>
       <button class="setrow" id="themeItem"><span>Theme</span><span id="themeVal" class="setval">auto</span></button>
       <button class="setrow" id="awakeItem"><span>Keep awake</span><span id="awakeVal" class="setval">off</span></button>
+      <button class="setrow" id="adjStartItem" hidden><span>Adjust race start</span><span class="setval">›</span></button>
       <button class="setrow" id="helpItem"><span>Help &amp; glossary</span><span class="setval">?</span></button>
 
       <div class="sp-sec"><span class="eyebrow">Change history</span></div>
@@ -613,7 +639,7 @@
     <div class="gterm"><b>Planned</b><span>The schedule from the team sheet — what was expected before anyone ran.</span></div>
     <div class="gterm"><b>Est.</b><span>Marks a leg that hasn't run yet: its start and finish are estimates, not recorded times.</span></div>
     <div class="gterm"><b>Exchange · handoff</b><span>Where one runner passes to the next (Sandy, OMSI, …). The van exchanges are where Van 1 and Van 2 trade off.</span></div>
-    <div class="gterm"><b>Adjust race start</b><span>Corrects the recorded race start time. Every ETA re-bases from it, so only change it if the start time is wrong.</span></div>
+    <div class="gterm"><b>Adjust race start</b><span>Corrects the recorded race start time — in the status menu (the dot) once the race is under way. Every ETA re-bases from it, so only change it if the start time is wrong.</span></div>
 
     <div class="gsec">Top bar</div>
     <div class="gterm"><b>Elapsed · Until start</b><span>The big clock: counts down to the start, then counts up from it.</span></div>
@@ -1082,9 +1108,6 @@ $('nextUp').addEventListener('click', (ev) => {
   document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(Number(x.dataset.van) === 0)));
   render();
 });
-$('nowSub').addEventListener('click', (ev) => {
-  if (ev.target.closest('#adjStart')) openDlg({ kind:'start' });
-});
 
 /* ================= Sync engine ================= */
 let syncing = false, retryTimer = null, failStreak = 0;
@@ -1221,6 +1244,9 @@ function render(){
   const now = new Date();
   const started = !!effStart();
   const cur = currentLeg();
+  // Adjusting the recorded start only makes sense once one exists; it lives in
+  // the status menu, not on the bib card.
+  $('adjStartItem').hidden = !started;
   const proj = projections();
   const nextLeg = cur && cur.leg < 36 ? LEGS[cur.leg] : null;
 
@@ -1243,7 +1269,7 @@ function render(){
     $('nowElapsed').textContent = st ? fmtT(st) : '—';
     $('nowProj').textContent = fin ? fmtT(fin) : '—';
     $('nowPlan').textContent = fin && st ? fmtDur(fin - st) : '—';
-    $('nowSub').innerHTML = '<span>All 36 legs recorded.</span><button id="adjStart">Adjust race start</button>';
+    $('nowSub').textContent = 'All 36 legs recorded.';
   } else {
     const s = cur.leg === 1 ? effStart() : actualEnd(cur.leg - 1);
     $('nowLeg').textContent = 'LEG ' + cur.leg + ' · ' + cur.miles.toFixed(2) + ' MI';
@@ -1257,7 +1283,7 @@ function render(){
       $('nowElapsed').textContent = fmtT(s);
       $('nowProj').textContent = fmtT(proj[cur.leg]);
       $('nowPlan').textContent = fmtDur(now - s);
-      $('nowSub').innerHTML = '<span></span><button id="adjStart">Adjust race start</button>';
+      $('nowSub').textContent = '';
     } else {
       $('nowElapsedLbl').textContent = 'Start';
       $('nowProjLbl').textContent = 'ETA';
@@ -1333,7 +1359,7 @@ function render(){
   }
 
   const upcoming = LEGS.filter(L => !actualEnd(L.leg) && (!cur || L.leg > cur.leg))
-                       .filter(L => !vanFilter || L.van === vanFilter).slice(0, 3);
+                       .filter(L => !vanFilter || L.van === vanFilter).slice(0, 2);
   const legsLeft = LEGS.filter(L => !actualEnd(L.leg)).length;
   const vanDoneOnly = !upcoming.length && vanFilter && legsLeft > 0;
   $('nextUp').innerHTML = upcoming.length ? upcoming.map(L =>
@@ -1350,6 +1376,11 @@ function render(){
   let totalKills = 0, v1Kills = 0, v2Kills = 0;
   for (const L of LEGS){ const k = killsFor(L.leg) || 0; totalKills += k; if (L.van === 1) v1Kills += k; else v2Kills += k; }
   $('killTotal').innerHTML = totalKills ? CHASE + ' ' + totalKills + ' total · <span class="v1">' + v1Kills + ' V1</span> · <span class="v2">' + v2Kills + ' V2</span>' : '';
+
+  // top-bar mini stats: legs done + total roadkills, beside the clock
+  const legsDone = LEGS.length - legsLeft;
+  $('legsStat').innerHTML = '<b>' + legsDone + '/' + LEGS.length + '</b> legs';
+  $('killsStat').innerHTML = '<b>' + totalKills + '</b> ' + CHASE;
 
   // race timeline
   const nextEx = EXCHANGES.find(x => x.afterLeg === 0 ? !started : !actualEnd(x.afterLeg));
@@ -1461,12 +1492,17 @@ function render(){
 
 /* ================= History toggle, gear menu, theme, keep-awake ================= */
 function setHistory(open){
+  const sc = $('scrim');
+  if (open) sc.hidden = false;
   $('history').classList.toggle('show', open);
-  $('scrim').hidden = !open;
+  sc.classList.toggle('show', open);
+  if (!open) sc.hidden = true;
   $('syncPill').setAttribute('aria-expanded', String(open));
 }
 function toggleHistory(){ setHistory(!$('history').classList.contains('show')); }
 $('syncPill').addEventListener('click', toggleHistory);
+$('menuClose').addEventListener('click', () => setHistory(false));
+$('adjStartItem').addEventListener('click', () => { setHistory(false); openDlg({ kind:'start' }); });
 $('scrim').addEventListener('click', (ev) => {
   ev.preventDefault();
   ev.stopPropagation();
