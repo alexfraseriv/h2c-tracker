@@ -420,10 +420,11 @@
      Tap it for the van's runner breakdown. */
   .vantot{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
     width:100%;text-align:left;padding:8px var(--s3);margin:var(--s3) 0 6px;border-radius:var(--r-md)}
-  .vantot .lbl{font-size:var(--t-xs);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-  .vantot .vright{display:flex;align-items:center;gap:var(--s1)}
+  .vantot .lbl{flex:0 1 auto;min-width:0;font-size:var(--t-xs);font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vantot .vright{flex:none;display:flex;align-items:center;gap:var(--s1)}
   .vantot .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;
-    font-size:var(--t-base);color:var(--ink)}
+    font-size:var(--t-base);color:var(--ink);white-space:nowrap}
   .vantot .val .kico{font-size:var(--t-sm);letter-spacing:-2px;margin-right:3px}
   .vantot .val .u{color:var(--faint);font-weight:600;font-size:var(--t-2xs);
     letter-spacing:.06em;text-transform:uppercase;margin-left:4px}
@@ -751,7 +752,7 @@
 
     <div class="gsec">Roadkills</div>
     <div class="gterm"><b>Roadkills 🏃🦞</b><span>Runners from other teams you pass on a leg. Tap the icon on a finished leg to log them. The count earns a Halo medal — Killing Spree at 5, Killing Frenzy at 10, Running Riot at 15, all the way up.</span></div>
-    <div class="gterm"><b>Van totals</b><span>The van's running roadkill line at each exchange. Tap it to see every runner in that van — their legs, distance, pace and kills so far.</span></div>
+    <div class="gterm"><b>Van totals</b><span>The van's roadkill line at each exchange — <b>set</b> is the six legs it just ran, <b>total</b> is the van's whole race so far. Tap it to see every runner in that van: their legs, distance, pace and kills.</span></div>
   </div>
   <div class="dlg-actions"><button class="ghost" id="helpClose" style="flex:1">Close</button></div>
 </dialog>
@@ -896,6 +897,10 @@ function killsFor(leg){
 // A van's running roadkill total across its own legs up to (and including) a leg.
 function vanKillsThrough(van, leg){
   return LEGS.reduce((s, L) => (L.van === van && L.leg <= leg) ? s + (killsFor(L.leg) || 0) : s, 0);
+}
+// Roadkills over a leg range (inclusive) — used for a van's per-set total.
+function killsInRange(fromLeg, toLeg){
+  return LEGS.reduce((s, L) => (L.leg >= fromLeg && L.leg <= toLeg) ? s + (killsFor(L.leg) || 0) : s, 0);
 }
 // Per-runner rollup for a van, over its finished legs through a given leg. Pure
 // and side-effect free so it can't disturb the rest of the app; the caller wraps
@@ -1588,11 +1593,15 @@ function render(){
     // the exchange once its set is in. The finish shows both vans side by side.
     let band = '';
     if (x.kind === 'swap' && done){
+      const setFrom = x.afterLeg - 5, setTo = x.afterLeg;   // the 6 legs this van just ran
+      const setK = killsInRange(setFrom, setTo);
+      const cumK = vanKillsThrough(x.from, x.afterLeg);
       band = '<button class="vantot vansum v' + x.from + '" data-van="' + x.from + '" data-through="' + x.afterLeg +
         '" aria-label="Van ' + x.from + ' runner summary through leg ' + x.afterLeg + '">' +
-        '<span class="lbl">Van ' + x.from + ' · through leg ' + x.afterLeg + '</span>' +
-        '<span class="vright"><span class="val"><span class="kico">' + CHASE + '</span>' + vanKillsThrough(x.from, x.afterLeg) +
-        '<span class="u">total</span></span><span class="vchev" aria-hidden="true">›</span></span></button>';
+        '<span class="lbl">Van ' + x.from + ' · legs ' + setFrom + '–' + setTo + '</span>' +
+        '<span class="vright"><span class="val"><span class="kico">' + CHASE + '</span>' +
+        setK + '<span class="u">set</span> · ' + cumK + '<span class="u">total</span></span>' +
+        '<span class="vchev" aria-hidden="true">›</span></span></button>';
     } else if (x.kind === 'finish' && done){
       band = '<div class="vantot vfin">' +
         '<button class="vfin-c vansum v1" data-van="1" data-through="36" aria-label="Van 1 runner summary">' +
