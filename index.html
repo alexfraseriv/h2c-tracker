@@ -1536,7 +1536,8 @@ function render(){
     $('plunger').classList.remove('startmode');
     if (nextLeg){
       const swapEx = EXCHANGES.find(x => x.kind === 'swap' && x.afterLeg === cur.leg);
-      $('plungerLabel').textContent = 'Record handoff';
+      // Van-to-van swaps are the "major exchanges"; a plain leg change is not.
+      $('plungerLabel').textContent = swapEx ? 'Record major exchange handoff' : 'Record handoff';
       $('plungerSub').textContent = dn(cur.runner) + ' → ' + dn(nextLeg.runner) +
         (swapEx ? ' · ' + swapEx.name : '');
     } else {
