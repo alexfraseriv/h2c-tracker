@@ -88,13 +88,18 @@
     border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
   .topbar{max-width:520px;margin:0 auto;min-height:56px;padding:6px var(--s4);
     display:flex;align-items:center;justify-content:space-between;gap:var(--s3)}
-  .ident{display:flex;align-items:center;gap:var(--s5);min-width:0}
-  /* Every clock on screen says what it is. */
-  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;text-align:left}
+  .ident{display:flex;align-items:center;gap:var(--s4);min-width:0;flex:1;overflow:hidden}
+  /* Every clock on screen says what it is. The elapsed clock keeps its full width;
+     the finish column yields (and clips as a last resort on tiny screens) so a long
+     clock can never bleed over the finish or slide under the buttons. */
+  .tstat{display:flex;flex-direction:column;align-items:flex-start;gap:1px;flex:none;text-align:left}
+  .ident > .tstat:last-child{flex:0 1 auto;min-width:0}
+  .ident > .tstat:last-child .mono{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar > div:last-child{flex:none}
   .tlabel{font-size:var(--t-2xs);letter-spacing:.12em;text-transform:uppercase;
     font-weight:700;color:var(--faint);line-height:1}
-  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-xl);
-    font-weight:700;line-height:1.1;letter-spacing:-.01em;flex:none}
+  #raceClock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:var(--t-lg);
+    font-weight:700;line-height:1.1;letter-spacing:-.02em;flex:none}
   /* Where the whole relay reaches Seaside. One tap swaps it for the vs-planned
      delta, and the label above changes with it so the number is never bare. */
   #finishChip{flex:none}
@@ -802,6 +807,14 @@ function fmtDur(ms){
                      : m + ':' + String(sec).padStart(2,'0');
   return (neg ? '-' : '') + core;
 }
+// Pre-race countdown. Under a day it ticks H:MM:SS; further out it collapses to
+// days + hours so the top bar never has to render "T−208:51:14".
+function fmtCountdown(ms){
+  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor((s%86400)/3600),
+        m = Math.floor((s%3600)/60), sec = s%60;
+  if (d > 0) return d + 'd ' + h + 'h';
+  return h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
 function fmtDelta(ms){
   const a = Math.abs(ms);
   if (a < 30000) return { txt:'on plan', cls:'' };
@@ -1255,7 +1268,7 @@ function render(){
     $('raceClock').textContent = cur ? fmtDur(now - effStart()) : fmtDur(actualEnd(36) - effStart()) + ' ✓';
   } else {
     $('clockLbl').textContent = now < RACE_PLANNED ? 'Until start' : 'Ready';
-    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtDur(RACE_PLANNED - now) : '--:--:--';
+    $('raceClock').textContent = now < RACE_PLANNED ? 'T−' + fmtCountdown(RACE_PLANNED - now) : '--:--:--';
   }
 
   if (!cur){
